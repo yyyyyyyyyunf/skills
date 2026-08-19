@@ -1,0 +1,39 @@
+skills/engineering/which-skill/SKILL.md
+  s_81bd9090ef01c6::t_57e99ba5279757 28
+skills/engineering/implement/SKILL.md
+  s_81bd9090ef01c6::t_c4c336263a9af6 14
+skills/engineering/setup-agent-workflow/SKILL.md
+  s_2abdcba90026b1::t_8aeeef0bfd1e8a 24
+  s_81bd9090ef01c6::t_817e9263421313 106
+  s_2abdcba90026b1::t_38d0e106ff5332 119-125
+  s_2abdcba90026b1::t_88353ed1b7ffd5 45
+  s_81bd9090ef01c6::t_644cb7aa573a93 72
+README.md
+  s_81bd9090ef01c6::t_b36691eca72d3d 26
+skills/engineering/setup-agent-workflow/issue-tracker-backlog-md.md
+  s_2abdcba90026b1::t_f33b95202b4523 7-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.40-trip",
+  "base_commit_sha": "20e0e9a52cdc6a1cc663b1f7db91e0843b3a862f",
+  "prompts": {},
+  "sessions": {
+    "s_2abdcba90026b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bd3a9611-4858-4fb1-b3ee-d844f9db763c",
+        "model": "claude-opus-5"
+      },
+      "human_author": "zongyf <zongyf@trip.com>"
+    },
+    "s_81bd9090ef01c6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "bd56728b-c5fd-4a22-952b-7a841431b38a",
+        "model": "claude-opus-5"
+      },
+      "human_author": null
+    }
+  }
+}
