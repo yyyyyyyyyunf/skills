@@ -8,7 +8,7 @@ My agent skills for Claude Code, Codex, Cursor, and Kimi Code.
 npx skills@latest add yyyyyyyyyunf/skills
 ```
 
-For local development, `scripts/link-skills.sh` symlinks every skill into the harness directories, so a `git pull` updates them all in place. Add `--project <dir>` to also link into `<dir>/.cursor/skills/`, which is the only level Cursor reads.
+For local development, `scripts/link-skills.sh` symlinks every skill into `~/.agents/skills/` (read by Kimi Code, Codex, and Cursor) and aliases each link into `~/.claude/skills/` (the only directory Claude Code reads), so a `git pull` updates them all in place. Add `--project <dir>` to also link into `<dir>/.agents/skills/` and `<dir>/.claude/skills/`.
 
 ## Invocation
 
