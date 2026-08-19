@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Verify skills repo integrity before allowing a commit.
+#
+# Rules:
+#   1. Every skills/<bucket>/<name>/SKILL.md has a row inside the matching
+#      bucket table in README.md (not merely anywhere in the file).
+#   2. Every SKILL.md's frontmatter `name:` equals its directory name.
+#
+# Deliberately NOT checked:
+#   - Symlinks. They live under $HOME (see scripts/link-skills.sh), not in the
+#     repo, so a hook cannot see them and has no business asserting them.
+#   - The invocation field. Which invocation a skill should have is a judgment
+#     call, not a consistency property; a hook could only verify the syntax,
+#     and the syntax does not get typed wrong.
+
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+errors=()
+
+while IFS= read -r skill_md; do
+  skill_dir="${skill_md%/SKILL.md}"
+  name="${skill_dir##*/}"
+  bucket="$(basename "$(dirname "$skill_dir")")"
+
+  if ! python3 "$ROOT/.githooks/readme-bucket-table.py" check README.md "$bucket" "$name" 2>/dev/null; then
+    errors+=("README.md missing row for skills/$bucket/$name/SKILL.md inside the ## bucket table")
+  fi
+
+  declared="$(awk '/^---/{n++; next} n==1 && /^name:/{sub(/^name:[[:space:]]*/,""); print; exit}' "$skill_md")"
+  if [ "$declared" != "$name" ]; then
+    errors+=("$skill_md declares name: '$declared' but lives in directory '$name'")
+  fi
+done < <(find skills -mindepth 3 -maxdepth 3 -name SKILL.md 2>/dev/null)
+
+if [ "${#errors[@]}" -gt 0 ]; then
+  {
+    printf '\npre-commit: skills repo integrity check failed:\n'
+    for e in "${errors[@]}"; do printf '  - %s\n' "$e"; done
+    cat <<'EOF'
+
+Fix with:
+  - python3 .githooks/readme-bucket-table.py insert README.md <bucket> <name> "<purpose>" <user|model>
+  - or correct the `name:` in the SKILL.md frontmatter to match its directory
+
+If you really need to bypass this once, append --no-verify to git commit.
+EOF
+  } >&2
+  exit 1
+fi
