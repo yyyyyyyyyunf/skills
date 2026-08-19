@@ -24,6 +24,8 @@ Every skill is one of two kinds, and the difference is who can reach it:
 | Skill | Purpose | Invocation |
 | ----- | ------- | ---------- |
 | [`settle`](skills/engineering/settle/SKILL.md) | Interview a plan until it holds, recording terms in `CONTEXT.md` and hard calls as ADRs | user |
+| [`acceptance`](skills/engineering/acceptance/SKILL.md) | Prove the delivery works with reproducible evidence, judged by whoever didn't build it | model |
+| [`acceptance-plan`](skills/engineering/acceptance-plan/SKILL.md) | Fix what counts as done before any code moves — and freeze the baseline while it still exists | model |
 | [`code-review`](skills/engineering/code-review/SKILL.md) | Review changes since a fixed point on two axes: repo standards and originating spec | model |
 | [`codebase-design`](skills/engineering/codebase-design/SKILL.md) | Deep-module vocabulary — depth, seams, adapters — for designing a module's shape | model |
 | [`codebase-value-audit`](skills/engineering/codebase-value-audit/SKILL.md) | Is this much code justified? Strict LOC accounting, every line attributed, verdict per block | model |

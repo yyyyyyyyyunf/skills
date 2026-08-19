@@ -28,6 +28,7 @@ Look at the current repo to understand its starting state. Read whatever exists;
 - `docs/agents/` — does this skill's prior output already exist?
 - `.scratch/` — sign that a local-markdown issue tracker convention is already in use
 - Is the `triage` skill installed? (a `triage` skill folder alongside this one, or `triage` in your available skills.) This decides whether Section B runs at all.
+- Is the `acceptance` skill installed? (same test.) This decides whether Section D runs at all. If it is, also probe what could supply the acceptance roles: dev/start scripts in `package.json`, an installed browser driver (`node_modules/.bin/playwright`, `puppeteer`, or a `chrome-devtools-mcp` entry in the harness MCP config), an HTTP client, a CLI entry point, and whether a test runner has any tests to run.
 - Monorepo signals — a `pnpm-workspace.yaml`, a `workspaces` field in `package.json`, or a populated `packages/*` with its own `src/`. Present only in a genuinely large multi-package repo; their absence means single-context, which is almost every repo.
 
 ### 2. Present findings and ask
@@ -64,12 +65,28 @@ The defaults are the five canonical roles, each label string equal to its name: 
 
 Offer **multi-context** — a root `CONTEXT-MAP.md` pointing to per-context `CONTEXT.md` files — only when exploration found monorepo signals. Then confirm which layout they want.
 
+**Section D — Acceptance.** Skip this section entirely if the `acceptance` skill isn't installed (exploration told you) — an uninstalled skill needs no declaration.
+
+> Explainer: `acceptance-plan` and `acceptance` own the judgement structure — what counts as a check, who renders the verdict, what a non-pass must name. Everything project-specific lives in `docs/agents/acceptance.md`, and they read it before doing anything. This is what lets one pair of skills serve a browser front end and a headless backend without knowing anything about either.
+
+Present a draft of the file rather than a list of questions — most of it is discoverable, and the user's job is to correct it. Fill it from exploration:
+
+- **The three roles** — what supplies *reproduce* (bring the system to an observable state), *observe* (read what a user or caller receives), and *archive* (persist it comparably) in this repo. Look for a dev/start script, an installed browser driver (`playwright`, `puppeteer`, a `chrome-devtools-mcp` entry in the harness config), an HTTP client, a CLI entry point. Optionally *sideband* (console, logs, network). **A role with nothing to supply it is left blank** — blank means checks needing it come back `blocked`, which is the honest outcome and better than a guess.
+- **Thresholds** — the numbers a program compares against (pixel tolerance, structural equality, response-field equality). No sensible default exists across repos; ask when exploration cannot infer one, and leave it blank rather than inventing one.
+- **Normalisation fields** — what to strip as unstable before comparing: timestamps, generated ids, durations, trace ids.
+- **Sensitivity sampling ratio** — the share of UI checks verified by reverting the change and confirming the check goes red. Default **10%, minimum 3**.
+- **Three paths** — baseline (committed), evidence (gitignored), report (committed). Default `acceptance/baseline/`, `acceptance/runs/`, `acceptance/reports/`, and add `acceptance/runs/` to `.gitignore`.
+
+In a monorepo, declare per package: a front end and a backend in one repo supply the roles differently, and one merged declaration makes both wrong. Use the layout in the seed template.
+
+Deliberately **not** in this file: the list of units or checks to verify. That changes with every delivery, and a long-lived declaration is the wrong home for it — `acceptance-plan` produces it per run.
+
 ### 3. Confirm and edit
 
 Show the user a draft of:
 
 - The `## Agent skills` block to add to whichever of `CLAUDE.md` / `AGENTS.md` is being edited (see step 4 for selection rules)
-- The contents of `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, and `docs/agents/triage-labels.md` (the last only when `triage` is installed)
+- The contents of `docs/agents/issue-tracker.md`, `docs/agents/domain.md`, `docs/agents/triage-labels.md` (the last only when `triage` is installed), and `docs/agents/acceptance.md` (only when `acceptance` is installed)
 
 Let them edit before writing.
 
@@ -101,9 +118,13 @@ The block:
 ### Domain docs
 
 [one-line summary of layout — "single-context" or "multi-context"]. See `docs/agents/domain.md`.
+
+### Acceptance
+
+[one-line summary — what supplies the observe role, and where baselines live]. See `docs/agents/acceptance.md`.
 ```
 
-Include the `### Triage labels` sub-block, and write `docs/agents/triage-labels.md`, only when `triage` is installed and Section B ran. When it isn't, both are omitted.
+Include the `### Triage labels` sub-block, and write `docs/agents/triage-labels.md`, only when `triage` is installed and Section B ran. When it isn't, both are omitted. The `### Acceptance` sub-block and `docs/agents/acceptance.md` follow the same rule for the `acceptance` skill and Section D.
 
 Then write the docs files using the seed templates in this skill folder as a starting point:
 
@@ -113,6 +134,7 @@ Then write the docs files using the seed templates in this skill folder as a sta
 - [issue-tracker-local.md](./issue-tracker-local.md) — local-markdown issue tracker
 - [triage-labels.md](./triage-labels.md) — label mapping (only if `triage` is installed)
 - [domain.md](./domain.md) — domain doc consumer rules + layout
+- [acceptance.md](./acceptance.md) — acceptance roles, thresholds, normalisation, paths (only if `acceptance` is installed)
 
 For "other" issue trackers, write `docs/agents/issue-tracker.md` from scratch using the user's description.
 
