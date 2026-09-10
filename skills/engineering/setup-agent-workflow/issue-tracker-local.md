@@ -10,6 +10,10 @@ Issues and specs for this repo live as markdown files in `.scratch/`.
 - Triage state is recorded as a `Status:` line near the top of each issue file (see `triage-labels.md` for the role strings)
 - Comments and conversation history append to the bottom of the file under a `## Comments` heading
 
+## Completion and persistence
+
+Tracker operations edit repository files; their changes travel with the work only once committed to Git. When closing or resolving a ticket, finish all tracker edits before the final task commit, including its status, comments, answer, and any required map updates. If the implementation is already committed, make a follow-up commit containing the tracker changes. Saving the files alone does not persist the completion in Git.
+
 ## When a skill says "publish to the issue tracker"
 
 Create a new file under `.scratch/<feature-slug>/` (creating the directory if needed).

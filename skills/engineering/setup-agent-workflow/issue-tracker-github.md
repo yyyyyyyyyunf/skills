@@ -13,6 +13,10 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 
 Infer the repo from `git remote -v` — `gh` does this automatically when run inside a clone.
 
+## Completion and persistence
+
+Tracker updates are stored remotely when the corresponding `gh` operations succeed; they produce no repository files to commit. When completing an implementation ticket, commit the repository work before posting the completion comment and closing the issue, then finish any required remote map updates. Confirm these operations succeeded before reporting the ticket complete.
+
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_

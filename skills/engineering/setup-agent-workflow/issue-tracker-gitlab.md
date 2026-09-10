@@ -14,6 +14,10 @@ Issues and specs for this repo live as GitLab issues. Use the [`glab`](https://g
 
 Infer the repo from `git remote -v` — `glab` does this automatically when run inside a clone.
 
+## Completion and persistence
+
+Tracker updates are stored remotely when the corresponding `glab` operations succeed; they produce no repository files to commit. When completing an implementation ticket, commit the repository work before posting the completion note and closing the issue, then finish any required remote map updates. Confirm these operations succeeded before reporting the ticket complete.
+
 ## Merge requests as a triage surface
 
 **MRs as a request surface: no.** _(Set to `yes` if this repo treats external merge requests as feature requests; `/triage` reads this flag.)_

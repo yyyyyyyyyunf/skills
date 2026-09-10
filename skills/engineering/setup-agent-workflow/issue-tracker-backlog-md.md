@@ -6,13 +6,13 @@ Task ids carry a configurable prefix (default `TASK-1`). Read commands accept `-
 
 ## Prerequisite: the CLI must be reachable
 
-Check once at the start of any session that uses this tracker:
+Use the project's configured CLI entry point. When the repo pins the CLI, use it throughout this document and the runner (for example `pnpm exec backlog`); prefer that version to an unrelated global binary. If the configured entry is a global CLI, check once at the start of the session:
 
 ```bash
 command -v backlog
 ```
 
-If it is missing, install it rather than working around it:
+If the selected CLI is missing, install it using the chosen package-manager/global setup rather than working around the tracker. For a global CLI:
 
 ```bash
 npm i -g backlog.md      # or: bun add -g backlog.md, brew install backlog-md
@@ -41,12 +41,16 @@ With MCP configured, the agent calls tools directly instead of spawning a proces
 
 `--plan` and `--notes` **replace** the field rather than appending. To add to an existing plan, read the current value first (`backlog task view <id> --json`) and write back the combined text.
 
+## Completion and persistence
+
+Tracker operations write files in this repository; their changes travel with the work only once committed to Git. When completing a ticket, finish all tracker updates before the final task commit, including comments, notes, the final summary, terminal status, and any required map updates. If the implementation is already committed, make a follow-up commit containing the tracker changes. CLI or MCP success alone does not establish that all of these changes are committed.
+
 ## Status values
 
 The status vocabulary is per-project. Read the real one before mapping anything onto it:
 
 ```bash
-backlog config
+backlog config list
 ```
 
 Typical shape is `To Do` → `In Progress` → `Done`. Everywhere below that a status is named, substitute this repo's actual value.

@@ -21,24 +21,30 @@ Every skill is one of two kinds, and the difference is who can reach it:
 
 > Daily code work.
 
+The usual flow is `/setup-agent-workflow` when configuring or upgrading a project, then `/settle` → `/to-spec` → `/to-tickets` for a requirement. Ticket review agrees how the work will be accepted, including project-specific test scripts, prerequisite preparation, and delegated design judgement.
+
+Setup can also connect an existing or selected unattended runner. For Sandcastle it reuses official initialization, migrates existing prompts to follow `implement`, and connects attempt results to continuation and worktree checks. Manual execution remains available. Runner integration and queue readiness are reported separately; rerunning setup surfaces old-ticket and environment gaps as well as configuration changes.
+
+`implement` runs `acceptance-plan` before implementation and `acceptance` after code review; neither needs a separate manual invocation. Project acceptance workflows are editable in `docs/agents/acceptance.md`; runner handoff and stopping rules live in `docs/agents/runner.md` when configured. A ticket closes only after its required acceptance criteria and gates pass, and tracker changes must be persisted before an unattended attempt is complete.
+
 | Skill | Purpose | Invocation |
 | ----- | ------- | ---------- |
 | [`settle`](skills/engineering/settle/SKILL.md) | Interview a plan until it holds, recording terms in `CONTEXT.md` and hard calls as ADRs | user |
-| [`acceptance`](skills/engineering/acceptance/SKILL.md) | Prove the delivery works with reproducible evidence, judged by whoever didn't build it | model |
-| [`acceptance-plan`](skills/engineering/acceptance-plan/SKILL.md) | Fix what counts as done before any code moves — and freeze the baseline while it still exists | model |
+| [`acceptance`](skills/engineering/acceptance/SKILL.md) | Judge delivery against the agreed contract, with evidence and a passed or held verdict | model |
+| [`acceptance-plan`](skills/engineering/acceptance-plan/SKILL.md) | Bind agreed acceptance to the execution environment and capture required pre-change baselines | model |
 | [`code-review`](skills/engineering/code-review/SKILL.md) | Review changes since a fixed point on two axes: repo standards and originating spec | model |
 | [`codebase-design`](skills/engineering/codebase-design/SKILL.md) | Deep-module vocabulary — depth, seams, adapters — for designing a module's shape | model |
 | [`codebase-value-audit`](skills/engineering/codebase-value-audit/SKILL.md) | Is this much code justified? Strict LOC accounting, every line attributed, verdict per block | model |
 | [`diagnosing-bugs`](skills/engineering/diagnosing-bugs/SKILL.md) | Hard bugs and perf regressions — refuses to theorise before a tight red feedback loop exists | model |
 | [`domain-modeling`](skills/engineering/domain-modeling/SKILL.md) | Actively sharpen the project's domain language; write the glossary and ADRs as terms resolve | model |
 | [`git-guardrails-claude-code`](skills/engineering/git-guardrails-claude-code/SKILL.md) | Install hooks that block destructive git commands before they execute | model |
-| [`implement`](skills/engineering/implement/SKILL.md) | Build a ticket end to end, driving TDD internally and closing with a code review | user |
+| [`implement`](skills/engineering/implement/SKILL.md) | Build a ticket through acceptance planning, implementation, review, verification, and tracker finalization | user |
 | [`improve-codebase-architecture`](skills/engineering/improve-codebase-architecture/SKILL.md) | Survey the codebase for deepening opportunities and present them as candidates | user |
 | [`prototype`](skills/engineering/prototype/SKILL.md) | Throwaway program that answers one design question talking cannot settle | model |
 | [`react-coding`](skills/engineering/react-coding/SKILL.md) | Hard rules for React: re-renders, memoization, keys, context, refs, closures | model |
 | [`research`](skills/engineering/research/SKILL.md) | Delegate reading legwork to a background agent; get back a cited Markdown file | model |
 | [`resolving-merge-conflicts`](skills/engineering/resolving-merge-conflicts/SKILL.md) | Resolve an in-progress merge by intent traced to each side's source, never by picking lines | model |
-| [`setup-agent-workflow`](skills/engineering/setup-agent-workflow/SKILL.md) | Run once per repo: configure the issue tracker, triage labels, and doc layout | user |
+| [`setup-agent-workflow`](skills/engineering/setup-agent-workflow/SKILL.md) | Configure or upgrade project tracking, acceptance, and optional unattended execution | user |
 | [`tdd`](skills/engineering/tdd/SKILL.md) | Test-driven development, one red-green slice at a time | model |
 | [`to-spec`](skills/engineering/to-spec/SKILL.md) | Collapse the current thread into a spec and publish it to the tracker | user |
 | [`to-tickets`](skills/engineering/to-tickets/SKILL.md) | Split a spec into tracer-bullet tickets, each declaring its blocking edges | user |

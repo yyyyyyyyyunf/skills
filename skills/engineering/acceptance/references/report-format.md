@@ -1,118 +1,93 @@
-# Report format
+# Acceptance report
 
-The acceptance report is the one artifact a human reads. It is committed, so it is also the record of what was true at the moment the delivery closed.
+Write one report per delivery attempt to the configured report directory. Use a distinct run ID and link it from the ticket. Reports and plans are committed; raw evidence remains under the gitignored evidence root.
 
-Write it to the report path declared in `docs/agents/acceptance.md`, named for the delivery and the run — `acceptance/reports/<delivery>-<round>.md`. A repair round is a new file, not an edit of the old one: a published report describes code that existed at that moment, and re-verification after a fix is the next report.
+Read [the acceptance contract](acceptance-contract.md) for the verdict rule. This report records its application, including project-specific methods and authorized exceptions.
 
 ## Skeleton
 
 ```markdown
-# Acceptance — <delivery name>
+# Acceptance — <ticket or delivery>
 
-<verdict>. coverage: <passed>/<attempted> · blocked: <n> · gap: <n> · none: <n>
+verdict: <passed | held>
+required criteria: <passed>/<total> · required gates: <passed>/<total>
+coverage: <passed>/<attempted> · failed: <n> · blocked: <n> · gap: <n> · none: <n>
 
-standard: <spec | old behaviour | authored>
-baseline: <path, or "none — equivalence unverified">
-thresholds: <the declared values used for this run>
-downgrades: <check ids downgraded to structural equivalence, or "none">
-sensitivity: <sampled n of m, all red on revert | UNVERIFIED for this batch>
+contract: <ticket/spec reference, including agreed exceptions>
+plan: <path; identify any checks planned late>
+code state: <revision and any uncommitted task changes represented by the evidence>
+provider changes: <requested provider, actual provider, and why the agreed alternative is equivalent; or none>
+proof-quality results: <required comparison/repetition/sensitivity results and any loss of precision; or not applicable>
 
-| Unit | Check | Verdict | Round | Judged by | Evidence |
-| ---- | ----- | ------- | ----- | --------- | -------- |
-| ...  | ...   | pass    | 1     | program   | <path>   |
+| Criterion | Requirement | Expected result / reference | Proof and judge | Outcome | Round | Evidence or blocker |
+| --- | --- | --- | --- | --- | --- | --- |
+| AC-1 | required | <assertion; baseline/design reference only if needed> | <method; program / blind / human> | <pass / failed / blocked / gap> | <0, 1, or 2> | <paths or specific missing input> |
 
-## Failed
+## Required gates
 
-### <check id> — <one line>
-Expected: <from the baseline or the spec>
-Observed: <what the evidence shows>
-Evidence: <paths>
+| Gate | Outcome | Execution record or blocker |
+| --- | --- | --- |
+| <gate> | <pass / failed / blocked> | <command/result evidence> |
 
-## Blocked
+## Reference artifacts
 
-| Check | Missing |
-| ----- | ------- |
-| <id>  | reproduce — no way to construct an expired coupon |
+| Criterion | Requirement | Reference |
+| --- | --- | --- |
+| AC-1 | <expected result / design reference / pre-change baseline> | <source or path; baseline not applicable for new behaviour; required-but-missing path otherwise> |
 
-## Gap
+## Outstanding actions
 
-| Behaviour | Expected proof |
-| --------- | -------------- |
-| <what changed> | <the test that should exist and does not> |
+<For every failed, blocked, or gap item, say what was expected, what was observed or missing, and the next action. Identify advisory items as such. Include explicitly required human approvals that are still pending.>
 
 ## None
 
-| Behaviour | Why nothing observes it |
-| --------- | ----------------------- |
-| <what changed> | <files, and the entry/output paths they sit on> |
-
-## Gates
-
-<one line: which preconditions ran and their result>
+<Changed material with no observable behaviour: paths and the reason no entry/output path is affected. This does not discharge an acceptance criterion.>
 ```
 
-## Rules the skeleton encodes
+## Counting and interpretation
 
-**The header carries four numbers, always.** `coverage` counts only checks that were attempted and judged. `blocked`, `gap`, and `none` sit beside it, never inside it. A report with a full coverage line and no other numbers is either a delivery with nothing unproven, or a report that hid what it could not prove — and the reader cannot tell which.
+- **Required criteria** includes every agreed required criterion, including failed, blocked, and gap items in the total. A criterion passes only when all proof required for it is established. Missing requirements keep the verdict held even when the total is not yet knowable.
+- **Required gates** counts project and ticket requirements, including unresolved gates in the total. List advisory gate observations separately if any.
+- **Coverage** is passed checks over attempted checks, including advisory checks. Blocked and gap checks are outside this denominator and counted beside it. Show `0/0 — none attempted` when appropriate; it is not a pass signal.
+- **Failed**, **blocked**, and **gap** count check outcomes across required and advisory items; the requirement column makes their effect on the verdict visible. Count `none` classifications separately.
+- **Round** is per check: `0` is the initial verification, `1` and `2` are repair rounds. Use `—` for a check that could not run.
+- **Judge** names the actual decision maker. An independent model judgement is `blind`, even when invoked through an assertion API; a pending human approval has no completed judge.
 
-**Every non-pass section is a table, not prose.** Each row names the checkable thing its outcome requires: a contract role or file path for `blocked`, the absent test for `gap`, the files and paths for `none`. Tables make an escape hatch visible; paragraphs make it comfortable.
+The expected result is always present. A baseline is present only when the assertion needs one. A missing required baseline is reported as missing, not as `not applicable`.
 
-**`Round` is per check, not per report.** A check that needed two attempts says so on its own row.
-
-**`Judged by` is `program` or `blind`.** It records which verdicts came from a threshold comparison and which from a sub-agent that saw only the check and the two artifacts.
-
-**Gates get one line.** Tests, type-check, lint, build. They ran, they are preconditions, and they do not enter the table.
-
-## Worked example
+## Example — new behaviour without a baseline
 
 ```markdown
-# Acceptance — tangram floor components → Next
+# Acceptance — TASK-1
 
-Held. coverage: 68/71 · blocked: 4 · gap: 37 · none: 2
+verdict: passed
+required criteria: 2/2 · required gates: 1/1
+coverage: 2/2 · failed: 0 · blocked: 0 · gap: 0 · none: 0
 
-standard: old behaviour
-baseline: acceptance/baseline/floors/
-thresholds: pixel diff ≤ 0.15%, dom structural equality
-downgrades: CountDown, AdSlider, InfoFlow — structural equivalence (animation, live content)
-sensitivity: sampled 8 of 71, all red on revert
+contract: TASK-1, add a task and retain it after reload
+plan: acceptance/plans/TASK-1.md
+code state: <recorded revision>
+provider changes: none; used the project's configured UI-test command
+proof-quality results: not applicable
 
-| Unit | Check | Verdict | Round | Judged by | Evidence |
-| ---- | ----- | ------- | ----- | --------- | -------- |
-| FloorGap | Renders the configured gap between floors | pass | 1 | program | runs/0417/floorgap.png |
-| ProductList | Product cards match the baseline layout | pass | 2 | blind | runs/0417/productlist.png |
-| CouponList | Expired coupon shows the fallback price | failed | 2 | program | runs/0417/couponlist.png |
-| DepartureCityList | Departure city list renders for the configured district | blocked | — | — | — |
+| Criterion | Requirement | Expected result / reference | Proof and judge | Outcome | Round | Evidence or blocker |
+| --- | --- | --- | --- | --- | --- | --- |
+| AC-1 | required | Adding "Milk" to an empty list shows exactly one matching item | project UI spec assertion / program | pass | 0 | runs/TASK-1/run-1/add-result.json |
+| AC-2 | required | Reloading retains that item | project UI spec assertion / program | pass | 0 | runs/TASK-1/run-1/reload-result.json |
 
-## Failed
+## Required gates
 
-### CouponList-expired — fallback price is absent
-Expected: baseline shows "¥0" struck through with the fallback label
-Observed: label renders, struck-through price is missing
-Evidence: runs/0417/couponlist.png, acceptance/baseline/floors/couponlist.png
+| Gate | Outcome | Execution record or blocker |
+| --- | --- | --- |
+| Project build | pass | runs/TASK-1/run-1/build.txt |
 
-## Blocked
+## Reference artifacts
 
-| Check | Missing |
-| ----- | ------- |
-| DepartureCityList-render | reproduce — no fixture produces a configured district |
-| IBUHeader-currency | reproduce — requires an authenticated session |
+Both checks use the expected results in TASK-1. Historical baseline: not applicable.
 
-## Gap
+## Outstanding actions
 
-| Behaviour | Expected proof |
-| --------- | -------------- |
-| helper.ts price rounding rewritten | no test covers rounding |
-| sharedActions floor ordering rewritten | no test covers ordering |
-
-## None
-
-| Behaviour | Why nothing observes it |
-| --------- | ----------------------- |
-| loadComponent import path change | build-time module resolution only; no entry or output path |
-
-## Gates
-
-Type-check clean, lint clean, `pnpm build` succeeds; no test suite exists in this repo.
+None.
 ```
 
-Read the example's header as one sentence: 68 of 71 attempted checks passed, four could not be reached, **37 changed behaviours have no proof at all**, and the three animated components are no longer compared by pixel. That last set of facts is what the report exists to deliver — the coverage number alone would have read as a near-clean pass.
+The same report would be `held` if the required reload assertion was skipped, its execution environment was unavailable, or the required build failed. A separately agreed advisory visual observation would remain visible without changing that rule.

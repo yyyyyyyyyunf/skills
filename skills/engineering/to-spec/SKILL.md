@@ -12,11 +12,9 @@ The issue tracker and triage label vocabulary should have been provided to you. 
 
 1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the spec, and respect any ADRs in the area you're touching.
 
-2. Sketch out the seams at which you're going to test the feature. Existing seams should be preferred to new ones. Use the highest seam possible. If new seams are needed, propose them at the highest point you can. The fewer seams across the codebase, the better - the ideal number is one.
+2. Carry forward the agreed testing seams, acceptance methods, design constraints, and delegated judgement. Read `docs/agents/acceptance.md` when present for project defaults. Preserve decisions already made in `settle`; list unresolved acceptance decisions as open questions for ticket review rather than starting a new interview or silently deciding them.
 
-Check with the user that these seams match their expectations.
-
-3. Write the spec using the template below, then publish it to the project issue tracker. Apply the `ready-for-agent` triage label - no need for additional triage.
+3. Write the spec using the template below, then publish it to the project issue tracker. Publishing a spec alone does not make it `ready-for-agent`; `to-tickets` assesses executable slices and their acceptance readiness.
 
 <spec-template>
 
@@ -63,6 +61,16 @@ A list of testing decisions that were made. Include:
 - A description of what makes a good test (only test external behavior, not implementation details)
 - Which modules will be tested
 - Prior art for the tests (i.e. similar types of tests in the codebase)
+- Agreed proof methods and project execution entry points, including conventions for executable test specs when relevant
+- Known verification prerequisites and preparation work
+
+## Acceptance and Design Decisions
+
+The outcomes and quality constraints already agreed with the user, their references, and the scope of delegated judgement. Include explicitly required final human approval and any authorized exceptions to project requirements. Identify behaviour that must be preserved as well as new behaviour. `to-tickets` maps these decisions into per-ticket verification; it should not need to reconstruct the user's taste.
+
+## Open Acceptance Questions
+
+Unresolved standards, proof methods, or prerequisite providers to settle during ticket review. Omit this section when none remain.
 
 ## Out of Scope
 
