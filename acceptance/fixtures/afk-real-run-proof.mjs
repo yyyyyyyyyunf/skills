@@ -71,6 +71,14 @@ for (let index = 0; index < record.iterations.length; index++) {
   assert.equal(receipt.attemptId, i.iterationId);
   assert.equal(receipt.ticketId, i.output.ticketId);
   assert.equal(receipt.verdict, "passed");
+  const prerequisiteCommits = {};
+  for (const path of [`acceptance/plans/${receipt.ticketId}.md`, "test/greet.test.mjs"]) {
+    const revision = git("log", "-1", "--format=%H", receipt.implementationRevision, "--", path);
+    assert.match(revision, /^[0-9a-f]{40}$/);
+    assert.notEqual(revision, receipt.implementationRevision, `${path} must be committed before the judged implementation commit`);
+    assert.equal(git("merge-base", revision, receipt.implementationRevision), revision);
+    prerequisiteCommits[path] = revision;
+  }
   assert.deepEqual(i.verification.outcome, {
     status: "completed",
     ticketId: receipt.ticketId,
@@ -125,6 +133,7 @@ for (let index = 0; index < record.iterations.length; index++) {
     candidateCommit: i.candidateCommit,
     mergedCommit: i.mergedCommit,
     implementationRevision: receipt.implementationRevision,
+    prerequisiteCommits,
     report: receipt.report,
     receiptPath: i.output.receiptPath,
     artifactRoot: i.artifactRoot,

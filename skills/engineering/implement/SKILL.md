@@ -10,7 +10,7 @@ Inspect the initial working-tree changes so you can distinguish existing work fr
 
 When invoked by an unattended runner, read its supplied handoff and `docs/agents/runner.md` for the attempt ID, result transport, and durable artifact locations. Use that protocol after finalization; acceptance's verdict alone does not declare successful task persistence or authorize another iteration. Missing required handoff configuration is an incomplete attempt to report, not permission to improvise a success signal.
 
-For the shared Backlog workflow, read [its protocol](../setup-agent-workflow/references/workflow-protocol.md). Work on the host-selected ticket and retain its attempt identity. Commit plans and test specs with the implementation state that acceptance judges. After acceptance, limit finalization to this ticket and its report/receipt; any additional implementation change requires acceptance of the new state.
+For the shared Backlog workflow, read [its protocol](../setup-agent-workflow/references/workflow-protocol.md). Work on the host-selected ticket and retain its attempt identity. Keep plans and test specs committed in the implementation state that acceptance judges. After acceptance, limit finalization to this ticket and its report/receipt; any additional implementation change requires acceptance of the new state.
 
 Before touching any code, call the Skill tool with "acceptance-plan" to bind the agreed contract and capture any required pre-change baseline. Read its readiness result. If it is `held`, record the blockers and go directly to finalization below, preserving the planning record without starting implementation.
 
@@ -18,7 +18,9 @@ When ready, call the Skill tool with "tdd" where appropriate at the pre-agreed s
 
 Run focused checks while working and the project/ticket's required engineering gates before completion. A test script's successful exit is useful only with evidence that the expected assertions actually ran.
 
-Commit an implementation checkpoint, then call the Skill tool with "code-review", supplying the recorded starting commit as the fixed point and the current ticket/spec reference and content. Reuse the task context already read. Its branch diff must include the implementation being reviewed. Resolve findings and commit review fixes before acceptance; the checkpoint is not a declaration that the ticket is complete.
+Create the implementation checkpoint in the order required by the ticket. If plans or tests must precede that commit, commit them separately first and verify their last-changing commits are strict ancestors of the judged revision. Apply the same order to review fixes.
+
+Then call the Skill tool with "code-review", supplying the recorded starting commit as the fixed point and the current ticket/spec reference and content. Reuse the task context already read. Its branch diff must include the implementation being reviewed. Resolve findings and commit review fixes before acceptance; the checkpoint is not a declaration that the ticket is complete.
 
 Then call the Skill tool with "acceptance" to execute the plan and return its verdict and report path. Review findings are cheaper to act on before evidence is collected. Only a `passed` verdict permits completed-ticket updates; a `held` report is a handoff with outstanding work.
 
