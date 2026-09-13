@@ -11,6 +11,7 @@ const tarball = realpathSync(tarballArg);
 const project = realpathSync(projectArg);
 const installed = join(project, "node_modules/@ai-hero/sandcastle");
 assert.equal(lstatSync(installed).isSymbolicLink(), false);
+assert.equal(realpathSync(installed), installed, "Installed package path must not traverse links");
 const hash = (path) =>
   createHash("sha256").update(readFileSync(path)).digest("hex");
 const git = (...args) =>
@@ -20,25 +21,35 @@ assert.equal(
   "",
   "Sandcastle source must be clean when binding the package",
 );
-const files = {};
-function compare(directory) {
+function inventory(root, directory = join(root, "dist"), files = {}) {
+  assert.equal(lstatSync(directory).isDirectory(), true, directory);
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name);
-    if (entry.isDirectory()) compare(path);
+    if (entry.isDirectory()) inventory(root, path, files);
     else {
-      assert.equal(entry.isFile(), true);
-      const name = relative(source, path);
-      assert.equal(hash(join(installed, name)), hash(path), name);
+      assert.equal(entry.isFile(), true, `Distribution entry must be a regular file: ${path}`);
+      const name = relative(root, path);
       files[name] = hash(path);
     }
   }
+  return files;
 }
-compare(join(source, "dist"));
+const files = inventory(source);
+assert.deepEqual(inventory(installed), files);
+const packedFiles = execFileSync("tar", ["-tzf", tarball], { encoding: "utf8" })
+  .trim().split("\n").filter((name) => name.startsWith("package/dist/") && !name.endsWith("/"));
+assert.deepEqual(packedFiles.map((name) => name.slice("package/".length)).sort(), Object.keys(files).sort());
+for (const name of packedFiles) {
+  const bytes = execFileSync("tar", ["-xOzf", tarball, name], { maxBuffer: 16 * 1024 * 1024 });
+  assert.equal(createHash("sha256").update(bytes).digest("hex"), files[name.slice("package/".length)], name);
+}
 const sourcePackage = JSON.parse(readFileSync(join(source, "package.json")));
+assert.equal(lstatSync(join(installed, "package.json")).isFile(), true);
 const installedPackage = JSON.parse(
   readFileSync(join(installed, "package.json")),
 );
 assert.deepEqual(installedPackage, sourcePackage);
+assert.deepEqual(JSON.parse(execFileSync("tar", ["-xOzf", tarball, "package/package.json"])), sourcePackage);
 const publicProbe = JSON.parse(
   execFileSync(
     process.execPath,
@@ -51,8 +62,8 @@ const publicProbe = JSON.parse(
   ),
 );
 assert.equal(
-  realpathSync(fileURLToPath(publicProbe.resolved)),
-  realpathSync(join(installed, "dist/index.js")),
+  fileURLToPath(publicProbe.resolved),
+  join(installed, "dist/index.js"),
 );
 assert.deepEqual(
   { ...publicProbe, resolved: undefined },

@@ -37,6 +37,13 @@ for (let index = 0; index < record.iterations.length; index++) {
   assert.equal(i.metadata.ticketId, i.output.ticketId);
   assert.equal(preparation.context.iterationId, i.iterationId);
   assert.equal(preparation.context.targetCommit, i.targetCommit);
+  assert.equal(preparation.context.hostRepoDir, project);
+  assert.equal(preparation.context.targetBranch, i.targetBranch);
+  assert.deepEqual(preparation.decision.metadata, i.metadata);
+  assert.equal(i.hostRepoDir, project);
+  assert.equal(i.targetBranch, git("symbolic-ref", "--short", "HEAD"));
+  assert.match(i.sourceBranch, /^sandcastle\//);
+  assert.notEqual(i.sourceBranch, i.targetBranch);
   assert.equal(i.verification.decision, "accept");
   assert.equal(i.output.outcome, "completed");
   assert.equal(i.verification.outcome.status, "completed");
@@ -48,17 +55,31 @@ for (let index = 0; index < record.iterations.length; index++) {
     i.targetCommit,
   );
   const raw = JSON.parse(readFileSync(i.rawResultPath));
-  assert.equal(raw.iterationId, i.iterationId);
-  assert.equal(raw.candidateCommit, i.candidateCommit);
+  const result = JSON.parse(readFileSync(i.resultPath));
+  for (const other of [raw, result, i.verificationContext]) {
+    for (const key of ["iterationId", "hostRepoDir", "worktreePath", "sourceBranch", "targetBranch", "targetCommit", "candidateCommit", "metadata"])
+      assert.deepEqual(other[key], i[key], `Iteration identity mismatch: ${key}`);
+  }
+  assert.equal(i.verificationContext.artifactRoot, i.artifactRoot);
+  assert.equal(i.verificationContext.resultPath, i.resultPath);
   assert.ok(raw.stdout.length > 0);
   assert.match(raw.sessionId, /^session_[0-9a-f-]+$/);
-  assert.deepEqual(JSON.parse(readFileSync(i.resultPath)).output, i.output);
+  assert.deepEqual(result, { ...raw, output: i.output });
   const receipt = JSON.parse(
     command("git", ["show", `${i.candidateCommit}:${i.output.receiptPath}`]),
   );
   assert.equal(receipt.attemptId, i.iterationId);
   assert.equal(receipt.ticketId, i.output.ticketId);
   assert.equal(receipt.verdict, "passed");
+  assert.deepEqual(i.verification.outcome, {
+    status: "completed",
+    ticketId: receipt.ticketId,
+    attemptId: receipt.attemptId,
+    implementationRevision: receipt.implementationRevision,
+    receiptPath: i.output.receiptPath,
+    reportPath: receipt.report.path,
+    artifacts: receipt.artifacts,
+  });
   const report = execFileSync(
     "git",
     ["show", `${i.candidateCommit}:${receipt.report.path}`],
