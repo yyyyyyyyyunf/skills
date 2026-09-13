@@ -36,11 +36,11 @@ function fixture(t) {
     "code-review",
     "tdd",
     "codebase-design",
+    "setup-agent-workflow",
   ])
-    write(
-      join(skillsRoot, name, "SKILL.md"),
-      `# ${name}\nFixture instructions.\n`,
-    );
+    cpSync(join(dirname(dirname(scripts)), name), join(skillsRoot, name), {
+      recursive: true,
+    });
   git("init", "-b", "main");
   git("config", "user.name", "Workflow fixture");
   git("config", "user.email", "workflow@example.invalid");
@@ -182,18 +182,88 @@ test("startup stops for registered or orphaned Sandcastle worktrees and preserve
 });
 
 test("startup rejects missing prerequisites and incompatible committed settings without modifying the project", async (t) => {
-  for (const scenario of [
-    "old-package",
-    "missing-skill",
-    "head",
-    "unbounded",
-    "missing-prompt",
-    "unfrozen-prompt",
-    "unignored-artifacts",
-    "dirty-config",
-    "container",
-  ]) {
-    await t.test(scenario, (t) => {
+  const scenarios = [
+    {
+      name: "old-package",
+      mutate: (f, opts) => {
+        delete opts.sandcastle.WORKFLOW_PROTOCOL_VERSION;
+      },
+      error: /Upgrade Sandcastle/,
+    },
+    {
+      name: "missing-skill",
+      mutate: (f) => rmSync(join(f.skillsRoot, "acceptance/SKILL.md")),
+      error: /SKILL.md/,
+    },
+    {
+      name: "missing-resource",
+      mutate: (f) =>
+        rmSync(
+          join(f.skillsRoot, "acceptance/references/acceptance-contract.md"),
+        ),
+      error: /acceptance-contract.md/,
+    },
+    {
+      name: "missing-transitive-resource",
+      mutate: (f) =>
+        rmSync(join(f.skillsRoot, "setup-agent-workflow/runner.md")),
+      error: /runner.md/,
+    },
+    {
+      name: "head",
+      mutate: (f) => {
+        f.config.runner.branchStrategy = "head";
+        f.commit();
+      },
+      error: /merge-to-head/,
+    },
+    {
+      name: "unbounded",
+      mutate: (f) => {
+        delete f.config.runner.executionTimeoutSeconds;
+        f.commit();
+      },
+      error: /executionTimeoutSeconds/,
+    },
+    {
+      name: "missing-prompt",
+      mutate: (f) => {
+        f.config.runner.promptFile = ".sandcastle/missing.md";
+        f.commit();
+      },
+      error: /committed regular file/,
+    },
+    {
+      name: "unfrozen-prompt",
+      mutate: (f) => {
+        f.config.contractPaths = ["docs/agents/acceptance.md"];
+        f.commit();
+      },
+      error: /contractPaths/,
+    },
+    {
+      name: "unignored-artifacts",
+      mutate: (f) => {
+        f.config.runner.artifactRoot = "unignored-output";
+        f.commit();
+      },
+      error: /gitignored/,
+    },
+    {
+      name: "dirty-config",
+      mutate: (f) => f.write(join(f.cwd, ".sandcastle/workflow.json"), "{}"),
+      error: /clean and committed/,
+    },
+    {
+      name: "container",
+      mutate: (f, opts) => {
+        opts.sandbox.tag = "bind-mount";
+      },
+      error: /host noSandbox/,
+    },
+  ];
+  for (const { name, mutate, error } of scenarios) {
+    await t.test(name, (t) => {
       const f = fixture(t);
       const opts = {
         sandcastle: {
@@ -204,54 +274,9 @@ test("startup rejects missing prerequisites and incompatible committed settings 
         cwd: f.cwd,
         configPath: ".sandcastle/workflow.json",
       };
-      if (scenario === "old-package")
-        delete opts.sandcastle.WORKFLOW_PROTOCOL_VERSION;
-      if (scenario === "container") opts.sandbox.tag = "bind-mount";
-      if (scenario === "missing-skill")
-        rmSync(join(f.skillsRoot, "acceptance/SKILL.md"));
-      if (scenario === "head") {
-        f.config.runner.branchStrategy = "head";
-        f.commit();
-      }
-      if (scenario === "unbounded") {
-        delete f.config.runner.executionTimeoutSeconds;
-        f.commit();
-      }
-      if (scenario === "missing-prompt") {
-        f.config.runner.promptFile = ".sandcastle/missing.md";
-        f.commit();
-      }
-      if (scenario === "unfrozen-prompt") {
-        f.config.contractPaths = ["docs/agents/acceptance.md"];
-        f.commit();
-      }
-      if (scenario === "unignored-artifacts") {
-        f.config.runner.artifactRoot = "unignored-output";
-        f.commit();
-      }
-      if (scenario === "dirty-config")
-        f.write(join(f.cwd, ".sandcastle/workflow.json"), "{}");
+      mutate(f, opts);
       const before = f.git("status", "--porcelain");
-      assert.throws(() => workflowRunOptions(opts), {
-        message:
-          scenario === "old-package"
-            ? /Upgrade Sandcastle/
-            : scenario === "missing-skill"
-              ? /SKILL.md/
-              : scenario === "head"
-                ? /merge-to-head/
-                : scenario === "unbounded"
-                  ? /executionTimeoutSeconds/
-                  : scenario === "missing-prompt"
-                    ? /committed regular file/
-                    : scenario === "unfrozen-prompt"
-                      ? /contractPaths/
-                      : scenario === "unignored-artifacts"
-                        ? /gitignored/
-                        : scenario === "container"
-                          ? /host noSandbox/
-                          : /clean and committed/,
-      });
+      assert.throws(() => workflowRunOptions(opts), { message: error });
       assert.equal(f.git("status", "--porcelain"), before);
     });
   }

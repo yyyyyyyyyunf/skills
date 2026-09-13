@@ -1,6 +1,6 @@
 import { existsSync, lstatSync, readdirSync, realpathSync } from "node:fs";
-import { dirname, isAbsolute, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { basename, dirname, extname, isAbsolute, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadConfig } from "./workflow-config.mjs";
 import {
   check,
@@ -21,6 +21,25 @@ const requiredSkills = [
   "tdd",
   "codebase-design",
 ];
+
+// Installed instructions use relative inline Markdown links for local resources.
+// Follow those links across skill boundaries, with cycles visited only once.
+function checkSkillResources(file, visited = new Set()) {
+  const resolved = realpathSync(file);
+  if (visited.has(resolved)) return;
+  visited.add(resolved);
+  const content = regularFile(dirname(resolved), basename(resolved));
+  if (extname(resolved) !== ".md") return;
+  for (const match of content
+    .toString("utf8")
+    .matchAll(/\[[^\]\n]*\]\(([^)\n]+)\)/g)) {
+    const target = match[1].split("#")[0];
+    if (!target) continue;
+    const url = new URL(target, pathToFileURL(resolved));
+    if (url.protocol === "file:")
+      checkSkillResources(fileURLToPath(url), visited);
+  }
+}
 
 /** Prepare native run options only. Sandcastle owns execution and progression. */
 export function workflowRunOptions({ sandcastle, sandbox, cwd, configPath }) {
@@ -96,10 +115,11 @@ export function workflowRunOptions({ sandcastle, sandbox, cwd, configPath }) {
     "runner.skillsRoot must be an absolute installed skills directory",
   );
   const skillsRoot = realpathSync(runner.skillsRoot);
+  const checkedResources = new Set();
   const skillFiles = new Map(
     requiredSkills.map((name) => {
       const directory = realpathSync(join(skillsRoot, name));
-      regularFile(directory, "SKILL.md");
+      checkSkillResources(join(directory, "SKILL.md"), checkedResources);
       return [name, join(directory, "SKILL.md")];
     }),
   );
