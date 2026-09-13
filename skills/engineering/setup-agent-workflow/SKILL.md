@@ -95,6 +95,8 @@ For an existing or selected runner, read [unattended execution](references/unatt
 
 This integration requires `implement` and its subskills/configuration. If Section D was skipped because acceptance is unavailable, record that execution prerequisite and keep the integration blocked; do not emit a working acceptance pointer to an absent file or enable a generic fallback loop.
 
+The shared Backlog commands and report/receipt contract are defined in [workflow-protocol.md](references/workflow-protocol.md). Read it when configuring that native integration. The installed commands own workflow checks; project files supply parameters and entry wiring.
+
 Draft `docs/agents/runner.md` using [runner.md](runner.md), together with the actual entry-script, prompt, and artifact-storage changes. Inspect existing open tickets and duplicated workflow rules for migration gaps. Settle what existing requirements mean before changing them; a missing UI tool does not authorize dropping a required UI check. Report integration verification and queue readiness separately.
 
 ### 3. Confirm and edit

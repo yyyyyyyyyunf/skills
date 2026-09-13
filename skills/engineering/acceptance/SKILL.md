@@ -11,6 +11,8 @@ Establish what the delivery proves, using the standard agreed before implementat
 
 Read [the acceptance contract](references/acceptance-contract.md), `docs/agents/acceptance.md`, and the execution plan linked from the ticket. Read the approved requirements and any referenced artifacts as needed.
 
+When the runner selects the shared Backlog protocol, also read [the unattended report binding](../setup-agent-workflow/references/workflow-protocol.md#acceptance-report-and-receipt). Bind the actual judged implementation revision, host attempt and ticket to the report and required evidence. Keep the existing acceptance judgement and required accounting; the machine receipt records that judgement and does not replace it.
+
 If the plan is absent, recover executable checks from the approved contract and mark them `planned late`. Continue checks that can still be proved. A missing baseline blocks only checks that require an old/new comparison; new behaviour can be judged against its agreed expected result. Missing requirements or project capability declarations are explicit blockers, not permission to invent a standard after seeing the result.
 
 For legacy plans, preserve their requirements and map named test yields to test-backed checks. Account for every legacy `blocked`, `gap`, and `none` entry.

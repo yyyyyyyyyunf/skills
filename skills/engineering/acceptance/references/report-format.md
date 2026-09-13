@@ -4,6 +4,8 @@ Write one report per delivery attempt to the configured report directory. Use a 
 
 Read [the acceptance contract](acceptance-contract.md) for the verdict rule. This report records its application, including project-specific methods and authorized exceptions.
 
+For the shared unattended Backlog integration, append the [workflow report binding and receipt](../../setup-agent-workflow/references/workflow-protocol.md#acceptance-report-and-receipt). Manual reports keep this format without that additional transport binding.
+
 ## Skeleton
 
 ```markdown

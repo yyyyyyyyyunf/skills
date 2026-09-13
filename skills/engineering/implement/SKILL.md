@@ -10,6 +10,8 @@ Inspect the initial working-tree changes so you can distinguish existing work fr
 
 When invoked by an unattended runner, read its supplied handoff and `docs/agents/runner.md` for the attempt ID, result transport, and durable artifact locations. Use that protocol after finalization; acceptance's verdict alone does not declare successful task persistence or authorize another iteration. Missing required handoff configuration is an incomplete attempt to report, not permission to improvise a success signal.
 
+For the shared Backlog workflow, read [its protocol](../setup-agent-workflow/references/workflow-protocol.md). Work on the host-selected ticket and retain its attempt identity. Commit plans and test specs with the implementation state that acceptance judges. After acceptance, limit finalization to this ticket and its report/receipt; any additional implementation change requires acceptance of the new state.
+
 Before touching any code, call the Skill tool with "acceptance-plan" to bind the agreed contract and capture any required pre-change baseline. Read its readiness result. If it is `held`, record the blockers and go directly to finalization below, preserving the planning record without starting implementation.
 
 When ready, call the Skill tool with "tdd" where appropriate at the pre-agreed seams. Create or update any executable test specs the contract requires, following the project's conventions and execution entry points. Complete preparation assigned to this ticket and record capabilities it actually establishes in the project acceptance configuration.
