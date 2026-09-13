@@ -5,8 +5,8 @@ Spec and dependency graph: [implementation plan](afk-workflow-implementation.md)
 | Package | State | Evidence / next action |
 | --- | --- | --- |
 | P0 | passed | Both acceptance reports: `acceptance/reports/AFK-P0-baseline.md`. Sandcastle 1447 passed/2 Windows skips, typecheck/build passed; skills integrity passed; independent review completed |
-| P1 | in progress | Bound plan in Sandcastle `acceptance/plans/AFK-P1.md`; real process-tree cancellation regression next |
-| P2 | pending P1 | Activity and bounded silent execution |
+| P1 | passed | Sandcastle `acceptance/reports/AFK-P1-termination.md`, code `9c8fef3`: 1465 passed/2 Windows skips in 55 files; typecheck/build passed. Two-axis review has no remaining findings. Original process-group probe passed 96/96 after the Darwin reaping repair |
+| P2 | in progress | Bound Sandcastle plan `acceptance/plans/AFK-P2.md`; implementing raw activity and bounded silent execution |
 | P3 | pending P0 | Durable evidence and cumulative recovery |
 | P4 | pending P1, P3 | Single-iteration guarded merge |
 | P5 | pending P4 | Shared workflow prepare/verify commands |
