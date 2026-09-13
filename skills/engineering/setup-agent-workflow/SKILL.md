@@ -91,11 +91,11 @@ Keep per-delivery criteria out of this project configuration. `to-tickets` gets 
 
 **Section E — Unattended execution.** This is optional and independent of the tracker choice. Carry forward an existing runner or the user's stated choice. If neither exists, offer manual execution as the default, with Sandcastle or another runner as alternatives. Manual execution completes setup without runner files or dependencies.
 
-For an existing or selected runner, read [unattended execution](references/unattended-execution.md). For Sandcastle, also read [its adapter guide](references/sandcastle.md). Reuse its initialization and execution APIs; adapt the project prompt to hand each eligible ticket to `implement`, and wire the per-attempt result to the runner's continuation decision. Installing a runner does not make skills or acceptance tools available inside its execution environment.
+For an existing or selected runner, read [unattended execution](references/unattended-execution.md). For Sandcastle, also read [its native integration guide](references/sandcastle.md). Reuse its initialization and execution APIs; adapt the project prompt to hand each eligible ticket to `implement`, and wire the per-attempt result to the runner's continuation decision. Installing a runner does not make skills or acceptance tools available inside its execution environment.
 
 This integration requires `implement` and its subskills/configuration. If Section D was skipped because acceptance is unavailable, record that execution prerequisite and keep the integration blocked; do not emit a working acceptance pointer to an absent file or enable a generic fallback loop.
 
-The shared Backlog commands and report/receipt contract are defined in [workflow-protocol.md](references/workflow-protocol.md). Read it when configuring that native integration. The installed commands own workflow checks; project files supply parameters and entry wiring.
+The shared Backlog commands and report/receipt contract are defined in [workflow-protocol.md](references/workflow-protocol.md). Read it when configuring that native integration. The installed commands own workflow checks; project files supply parameters and native entry wiring. Require the supported protocol before enabling AFK; do not generate a per-project outer loop/checker as a compatibility fallback.
 
 Draft `docs/agents/runner.md` using [runner.md](runner.md), together with the actual entry-script, prompt, and artifact-storage changes. Inspect existing open tickets and duplicated workflow rules for migration gaps. Settle what existing requirements mean before changing them; a missing UI tool does not authorize dropping a required UI check. Report integration verification and queue readiness separately.
 
@@ -170,14 +170,15 @@ For "other" issue trackers, write `docs/agents/issue-tracker.md` from scratch us
 
 1. Reuse the pinned project CLI when present. If the chosen entry point is unavailable, install it through the project's package manager, or use `npm i -g backlog.md` when a global CLI was selected. A missing global binary does not require a global install when the project CLI works.
 2. Initialise the tracker if no `backlog/` directory or `backlog.config.yml` exists: `backlog init "<project name>"` through the selected entry point.
-3. Read the real status vocabulary with `backlog config list` through the selected CLI entry point, and write those exact values into `docs/agents/issue-tracker.md` wherever the template names a status — the template ships with `To Do` / `In Progress` / `Done` as a placeholder shape, not as fact. Bare `backlog config` starts interactive configuration rather than a read-only query.
-4. Offer the MCP server: `claude mcp add backlog --scope user -- backlog mcp start`. It replaces a process spawn per operation with a direct tool call. Offer it; don't run it unasked, since it edits the user's harness config rather than this repo.
+3. For shared Backlog AFK, configure local-only reads (`checkActiveBranches: false`, `remoteOperations: false`) through the CLI. On a new non-interactive 1.51.0 initialization use `--integration-mode none --check-branches false --include-remote false --auto-open-browser false`; do not combine `--integration-mode none` with `--agent-instructions none`. Preserve an existing tracker and chosen integration mode on reruns.
+4. Read the real status vocabulary with `backlog config list` through the selected CLI entry point, and write those exact values into `docs/agents/issue-tracker.md` wherever the template names a status — the template ships with `To Do` / `In Progress` / `Done` as a placeholder shape, not as fact. Bare `backlog config` starts interactive configuration rather than a read-only query.
+5. Offer the MCP server: `claude mcp add backlog --scope user -- backlog mcp start`. It replaces a process spawn per operation with a direct tool call. Offer it; don't run it unasked, since it edits the user's harness config rather than this repo.
 
-When Section E selected a runner, also implement the approved adapter changes: initialise only for first use, update the real entry script and prompts, wire result validation and continuation, and configure durable artifacts. Apply agreed existing-ticket corrections through the tracker. Writing `docs/agents/runner.md` alone does not establish the integration.
+When Section E selected a runner, also implement the approved native integration changes: initialise only for first use, update the real entry script and prompts, wire result validation and continuation, and configure durable artifacts. Apply agreed existing-ticket corrections through the tracker. Writing `docs/agents/runner.md` alone does not establish the integration.
 
 ### 5. Verify and hand off
 
-Check generated links, invocation paths, and consistency across the project docs. When a runner was selected, perform the adapter verification in the unattended execution guide. Fix failures in the configuration within scope; name external preparation or unresolved decisions that remain.
+Check generated links, invocation paths, and consistency across the project docs. When a runner was selected, perform the integration verification in the unattended execution guide. Fix failures in the configuration within scope; name external preparation or unresolved decisions that remain.
 
 Report which configuration was created or migrated, which checks actually ran, and any remaining preparation. Configuration completion does not claim that selected future capabilities are runnable. For a runner, distinguish integration `verified`, `unverified`, or `blocked` from queue `ready`, `empty`, or `blocked`; use `unknown` when the queue could not be read. Never describe a failed tracker read as an empty queue.
 

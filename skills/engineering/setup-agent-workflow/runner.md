@@ -10,7 +10,7 @@ Project configuration consumed by the runner prompt and `implement`. Fill the en
 - Skill lookup/invocation in that environment:
 - Workflow: `implement`; its required skills must also be available.
 - Branch/merge strategy, including where held checkpoint commits land:
-- Overall iteration bound:
+- Overall iteration bound and per-invocation idle/absolute/completion deadlines:
 
 Read `docs/agents/issue-tracker.md` for tracker commands and persistence order. Include a pointer to `docs/agents/acceptance.md` for proof workflows once that file exists; otherwise list it and the missing acceptance skills as execution prerequisites below. The `implement` integration remains blocked until its required configuration and skills are available. The task/spec carries the approved acceptance contract.
 
@@ -25,18 +25,20 @@ No eligible work with unfinished tickets in scope is a blocked queue. Queue exha
 
 ## Per-attempt result
 
-Bind the following semantics to the actual structured-output or file transport and its validator. Record the exact schema/tag/path here so the prompt, `implement`, and entry script agree. The runner supplies a fresh attempt ID; the result identifies that attempt, its ticket (or no selected ticket), artifact references, and any unresolved steps.
+Bind the following semantics to the actual structured-output or file transport and its validator. Record the exact schema/tag/path here so the prompt, `implement`, and entry script agree. The host supplies a fresh attempt ID and selected ticket; agent output identifies that attempt/ticket, artifact references and unresolved steps. For native Sandcastle, read the appended iteration-context JSON and use the installed workflow schema/receipt protocol. The host owns no-work/blocked queue decisions; the agent does not select another ticket or declare exhaustion.
 
 | Outcome | Meaning | Default runner action |
 | --- | --- | --- |
 | `completed` | Required acceptance passed, tracker finalization succeeded, and required work/artifacts are durable | Independently check persistence/cleanup, then allow another eligible ticket |
 | `held` | Required acceptance or preparation could not pass; work and blockers were preserved, ticket remains open | Stop and report next actions |
 | `incomplete` | Finalization, artifact persistence, or another required execution step failed | Stop and report recovery references |
-| `no-work` | The configured queue was read successfully and has no remaining work | End normally |
-| `blocked` | Work remains in scope but no ticket is currently eligible | Stop and report blockers |
 
+
+Host queue outcomes: `no-work` follows a successful complete scope read with nothing remaining; `blocked` means unfinished but ineligible work and carries blockers. `iteration-limit` is distinct from both.
+
+- Authoritative committed configuration path and installed shared command/helper paths:
 - Actual result schema and transport:
-- Host validation of completed-ticket state and report references:
+- Host validation before merge, followed by destination/cleanup/record confirmation:
 - Any explicitly agreed continuation-policy override:
 
 Missing, invalid, stale, or contradictory results stop the run. A preserved/dirty worktree, failed commit/merge/cleanup, or unreadable required artifact stops it even if the agent reports `completed`. A process exit or stop token alone is not an accepted result.
@@ -44,8 +46,8 @@ Missing, invalid, stale, or contradictory results stop the run. A preserved/dirt
 ## Durable artifacts and recovery
 
 - Plan/report paths and their Git persistence:
-- Persistent evidence root and how it is exposed inside the execution environment:
-- Runner outcome/error record location outside disposable worktrees:
+- Relative evidence paths exported from each task worktree and their persistent host root:
+- Runner preparation/outcome/error record and raw/validated result paths outside disposable worktrees:
 - How to retrieve evidence after worktree removal:
 - How to inspect retained worktrees/commits and explicitly resume after resolving the cause:
 

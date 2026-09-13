@@ -154,6 +154,62 @@ test("prepare excludes parent specs, selects dependencies in order, and recogniz
   assert.equal(result.value.decision, "no-work");
 });
 
+test("Backlog completion, periodic collection and abandonment have distinct persisted states", (t) => {
+  const f = fixture(t);
+  f.task("First");
+  f.task("Dependent", "--dep", "TASK-1");
+  const detail = (id) =>
+    JSON.parse(f.backlog("task", "view", id, "--json")).task;
+  const originalPath = detail("TASK-1").path;
+  f.backlog("task", "edit", "TASK-1", "-s", "Done", "--check-ac", "1");
+  f.commit();
+  assert.equal(detail("TASK-1").path, originalPath);
+  assert.match(originalPath, /tasks\//);
+  assert.equal(
+    f.invoke("prepare", f.context()).value.metadata.ticketId,
+    "TASK-2",
+  );
+  // Git does not retain empty completed directories in fresh worktrees.
+  rmSync(join(f.dir, "backlog/completed"), { recursive: true, force: true });
+  mkdirSync(join(f.dir, "backlog/completed"), { recursive: true });
+  f.backlog("task", "complete", "TASK-1");
+  f.commit();
+  assert.match(detail("TASK-1").path, /completed\//);
+  assert.equal(detail("TASK-1").status, "Done");
+  assert.deepEqual(detail("TASK-2").dependencies, ["TASK-1"]);
+  assert.equal(
+    f.invoke("prepare", f.context()).value.metadata.ticketId,
+    "TASK-2",
+  );
+  f.backlog(
+    "task",
+    "edit",
+    "TASK-2",
+    "--remove-label",
+    "ready-for-agent",
+    "--add-label",
+    "needs-info",
+    "--append-plan",
+    "Keep contract unchanged",
+    "--append-notes",
+    "Waiting for a decision",
+  );
+  assert.ok(detail("TASK-2").labels.includes("trial"));
+  f.commit();
+  assert.equal(f.invoke("prepare", f.context()).value.decision, "blocked");
+  f.task("Abandoned");
+  const abandonedPath = detail("TASK-3").path;
+  f.backlog("task", "archive", "TASK-3");
+  const archived = readFileSync(
+    join(f.dir, "backlog/archive/tasks", abandonedPath.split("/").at(-1)),
+    "utf8",
+  );
+  assert.match(archived, /status: To Do/);
+  assert.throws(() => readFileSync(join(f.dir, abandonedPath)));
+  f.commit();
+  assert.equal(f.invoke("prepare", f.context()).value.decision, "blocked");
+});
+
 test("prepare distinguishes blocked queues, empty scopes, conflicting roles and read failures", (t) => {
   const f = fixture(t);
   f.task("Human", "--assignee", "@other");

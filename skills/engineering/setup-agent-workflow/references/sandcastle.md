@@ -1,56 +1,58 @@
-# Sandcastle adapter
+# Sandcastle native workflow
 
-Read after [unattended execution](unattended-execution.md) when Sandcastle is present or selected. Adapt the installed version. The findings below were checked against `@ai-hero/sandcastle` 0.12.0; inspect its local package exports/types/templates and consult the [official documentation](https://github.com/mattpocock/sandcastle) for APIs that differ.
+Read after [unattended execution](unattended-execution.md) when Sandcastle is present or selected. Inspect the installed package exports/types/templates. This integration requires `WORKFLOW_PROTOCOL_VERSION === 1`, `preparation`, `verification`, `iterationOutput`, artifact export and confirmed cancellation. The original official 0.12.0 lacks this protocol; a version string alone cannot distinguish it from a compatible local fork artifact. Report an upgrade/preparation gap before agent invocation when capabilities are missing. Do not generate a per-project outer loop as a fallback.
 
-## Reuse initialization
+## Initialize or migrate
 
-For an existing integration, follow package scripts to the real entry file and every referenced prompt. Edit in place after the setup draft; preserve custom hooks, model/provider choices, and project restrictions. `sandcastle init` rejects an existing `.sandcastle/`, so rerunning it is not a migration. A directory containing only logs also needs an explicit destination/preservation decision rather than deletion to make init succeed.
+For first use, reuse the selected package's official initializer and inspect its help. A blank scaffold and Custom tracker suit Backlog. Use supported non-interactive flags. If the selected third-party agent or provider is absent from the menu, placeholder scaffold selections are acceptable without execution or image building; immediately replace the active wiring with the selected adapter, model/auth and provider before any run. Initialization, dependency/image preparation and live execution are separate steps.
 
-For first use, install or reuse the project's selected version, then use its official `init` with the chosen provider and agent. Read that version's help to supply supported non-interactive options where possible. Choose a minimal suitable template; the `blank` scaffold is sufficient when the implementation workflow will come from skills. Keep initialization, image building, and live task execution distinct. Inspect generated files and finish adapting them before reporting the integration ready.
+For a rerun, follow package scripts to the actual entry and every referenced prompt. `sandcastle init` rejects an existing `.sandcastle/`; do not delete logs or retained work to make it run. Edit active configuration in place, preserving model/auth choices, useful hooks, limits and project acceptance requirements. Retire active references to a bespoke AFK loop/reaper/checker after wiring the native entry. Historical scripts and records can remain inactive for review; migration does not execute cleanup or replay their real queue.
 
-The 0.12.0 initializer provides GitHub Issues, Beads, and Custom tracker choices. Use Custom for Backlog.md or another tracker without a native adapter, then use `docs/agents/issue-tracker.md` to resolve the placeholders in `SETUP_ISSUE_TRACKER.md` and the generated files. Reuse the tracker selected by setup; do not create another queue or label vocabulary. Custom scaffolds deliberately fail until configured.
+Resolve the selected agent's existing adapter package from project dependencies, a supplied installation or its primary documentation. If it is unavailable, record the dependency preparation needed; do not implement a new project-specific adapter as a setup workaround. For Kimi, the existing `sandcastle-agent-kimi` package supplies `kimiCode`. Preserve the selected host OAuth alias or API-key channel when constructing it.
 
-Official templates are editable starting points. The 0.12.0 `simple-loop` and `sequential-reviewer` implementation prompts prescribe commit-before-close without a follow-up commit; replace their duplicated implementation/finalization sequence with the `implement` handoff. Preserve useful task context and dependency preparation. Choosing a template does not install the engineering skills.
+## One project configuration, installed shared checks
 
-## Wire the prompt and environment
+Read [workflow-protocol.md](workflow-protocol.md). Its committed `.sandcastle/workflow.json` owns queue/contract parameters. Add a `runner` section:
 
-The entry must explicitly pass `promptFile` or `prompt`; `.sandcastle/prompt.md` is not automatically discovered. Preserve dynamic context only after validating its queue command and failure handling. If using `promptArgs`, bind the fresh attempt ID and selected ticket/context through supported substitutions.
+```json
+{
+  "runner": {
+    "promptFile": ".sandcastle/prompt.md",
+    "skillsRoot": "/absolute/installed/skills",
+    "branchStrategy": "merge-to-head",
+    "maxIterations": 10,
+    "idleTimeoutSeconds": false,
+    "executionTimeoutSeconds": 3600,
+    "completionTimeoutSeconds": 60,
+    "commandTimeoutSeconds": 30,
+    "artifactRoot": ".sandcastle/evidence"
+  }
+}
+```
 
-The task prompt should do four things:
+These are example values; retain the project's chosen finite limits. Paths inside the project are relative, `skillsRoot` is absolute. Include the actual entry, prompt, project acceptance document and Backlog config in `contractPaths`. Keep `.sandcastle/evidence/`, `.sandcastle/logs/`, `.sandcastle/worktrees/` and the configured evidence roots gitignored. Commit the configuration and contract before launch.
 
-1. Read the repo instructions and the project runner/tracker configuration.
-2. Use the selected ticket and parent spec, or select one eligible ticket using the configured queue rules.
-3. Load and follow the installed `implement` skill. Keep implementation and acceptance ordering in that skill, and task-specific standards in the approved contract.
-4. Return the configured attempt result after finalization, including its IDs and artifact references. Queue exhaustion or blockage can return before implementation, with the appropriate reason.
+Use the installed [workflow-run.mjs](../scripts/workflow-run.mjs) `workflowRunOptions({ sandcastle, sandbox, cwd, configPath })` to bind that configuration to a native call. This helper reads committed settings, verifies host skill/script/prompt availability, rejects incompatible settings and stops for leftovers under `.sandcastle/worktrees/`. It returns options; it never calls `run`, chooses a task, mutates Git or cleans worktrees. The installed `workflow.mjs` commands own queue selection and completion verification. Projects do not copy their source.
 
-Check skill availability for the selected agent in its actual environment. With a host runner, inspect the harness's real skill paths; with a container, make the complete required skill directories and references available through the approved installation or read-only mounts. Symlinks targeting host-only paths do not establish container access. Use the harness's supported invocation mechanism, with an explicit read-and-follow instruction when a user-invoked skill is not callable through its Skill tool.
+The shared startup helper currently verifies the host `noSandbox` path. A container requires actual in-container skill/reference availability and separately proven path mapping; a host symlink is insufficient. Record that preparation gap instead of enabling a host-path configuration inside a container.
 
-Bind durable evidence storage before the attempt. A persistent host artifact root can be exposed through a narrow container mount or an explicitly permitted host path for `noSandbox`. Retain the project's evidence layout where possible and ensure it is gitignored where appropriate. Do not rely on reading artifacts from a worktree after `run()` returns: cleanup may already have removed it.
+## Native entry and prompt
 
-## Connect outcomes to the loop
+Keep the project's native entry small: import the installed Sandcastle namespace, selected agent adapter and noSandbox provider; import `workflowRunOptions` through its setup-resolved installed absolute path; derive the repository root from the entry's `import.meta.url`; then call `sandcastle.run({ ...workflowRunOptions(...), agent: selectedAgent })`. Preserve the existing agent construction and authentication channel. Print the run's stop reason and recovery record path; do not add another loop or catch-and-continue handler. The official blank template uses a top-level awaited `run()`; use the project's chosen Node/tsx command for its actual `.mjs`/`.mts` entry.
 
-The installed 0.12.0 API exposes completion signals, structured output, and `preservedWorktreePath`. Its public hooks run during setup, not after each iteration. Agent/merge errors fail the call, but a normal exit with held prose or a preserved worktree can proceed to another internal iteration. Its final result can also lose an earlier iteration's preserved path when a later iteration overwrites it.
+`workflowRunOptions` supplies an absolute `promptFile`, the `IMPLEMENT_SKILL` prompt argument, shared preparation/verification argv, `Output.object` with the installed workflow schema, zero extraction retries, explicit merge strategy, limits and artifact export. `.sandcastle/prompt.md` is not auto-discovered. Existing project-specific prompt arguments or restrictions must be retained when adapting the entry and prompt; avoid overriding the host-generated attempt/ticket identity.
 
-For that API, use an outer loop that calls `run({ ...projectOptions, maxIterations: 1 })` once per attempt. Preserve the project's overall iteration bound. Before the first call, check the execution prerequisites and unresolved leftovers for this run; stop for investigation instead of hiding retained work through cleanup. Before each subsequent call, finish validating the preceding result.
+The prompt should:
 
-Implement the boundary as follows:
+1. Read repository instructions and `docs/agents/runner.md`/`issue-tracker.md`/`acceptance.md`.
+2. Read the appended `<sandcastle-iteration-context>` JSON. Use its `iterationId` as the attempt ID, its metadata's selected ticket and frozen contract, and its actual worktree/source/target paths. The host has already selected the task; do not choose another ticket or report queue exhaustion from the agent.
+3. Explicitly read and follow `{{IMPLEMENT_SKILL}}` for that ticket and its parent context. Keep implementation, review, acceptance and finalization ordering in that skill. Resolve its required subskills in the same environment, including independent review/judgement capabilities. Install complete skill directories and referenced resources, not isolated SKILL.md copies.
+4. After finalization, emit `<workflow-result>` with the shared completed/held/incomplete schema. Write evidence under the configured relative evidence paths in the task worktree; Sandcastle copies those paths into the handoff's artifact root before checking/cleanup. Use the shared report/receipt binding. The completion token is optional shutdown guidance, never acceptance or an empty-queue verdict.
 
-1. Create a fresh attempt ID and pass it into the prompt with the project result schema.
-2. Use `Output.object` with a supported schema validator already available to the project, or `Output.string` followed by JSON/schema validation. In 0.12.0 these require one iteration and the opening output tag in the resolved prompt. Keep extraction retries disabled (`maxRetries: 0`) so malformed output cannot create an unexamined retry. Keep result extraction distinct from completion signals.
-3. Await the entire call. On an exception, persist the error and any returned recovery paths/commit information outside the disposable worktree, then stop.
-4. Check `preservedWorktreePath` before considering continuation. If present, report it and stop, regardless of the agent's claimed outcome. Do not automatically delete it.
-5. Validate the current result's attempt/ticket identity, outcome, artifact references, and finalization using the project contract. Apply its continuation policy. Persist the runner's decision outside the disposable worktree before allocating another one.
+A completed result passes schema extraction, shared verification and a checked fast-forward before the next preparation. Held/incomplete retains the source and stops. Invalid results, command errors and failed persistence stop with recovery references. `no-work`/`blocked` are host preparation decisions; `iteration-limit` means the configured bound was reached. `RunResult.preparation` carries a terminal queue decision and its metadata. Read `<runner.artifactRoot>/<run-id>/run.json`, per-iteration raw/validated results and retained paths to investigate; setup does not silently restart held work.
 
-The default `<promise>COMPLETE</promise>` is a stop token, not proof that a ticket passed or that the queue is empty. If retained, its meaning must agree with the result protocol. A blocked queue must not be reported as all tickets completed.
+## Verify generated configuration
 
-`merge-to-head` can merge commits before cleanup and before the caller sees the result. The outer loop stops further allocation; it does not prevent the current held attempt's checkpoint commits from merging. Keep this distinction visible in `docs/agents/runner.md`. A different merge policy is a separate project decision.
+Exercise the generated entry with a fake agent/executor and temporary Git/Backlog fixtures. Assert the installed shared path and native option bindings, missing-capability failure before invocation, observable stop behavior and preservation of historical artifacts. Include a copy of an existing configuration to verify model/auth and acceptance choices survive migration. Core process/merge checks belong to Sandcastle's tests; do not recreate that engine in the project.
 
-On versions with another supported per-attempt API, it may replace the outer loop if it provides the same checks before another worktree is allocated. Use the installed API, not imagined `afterIteration` or `stopOnDirty` hooks.
-
-## Verify without running the queue
-
-Apply the scenarios in the generic guide to the generated wrapper with an injected/fake `run` function. Assert call count and that failures stop before a second allocation; include an early preserved path followed by a would-be successful attempt. Exercise queue parsing separately, including failed subprocesses and conflicting readiness labels.
-
-Use a temporary Git repository to prove the project's tracker finalization order and artifact persistence across worktree cleanup. Adapt any retained reaper only within the approved changes; simulate a failed salvage operation and require it to preserve the work. Never run the project's real cleanup command for this test.
-
-Then check the selected execution environment and record what was verified. A static inspection or fake executor does not prove container credentials, skill access, or browser capabilities. If a bounded environment probe cannot run, finish configuration with that readiness gap explicit and give the exact next check.
+Separately check real executor skill/reference access, tracker CLI and required proof tools. Record resolved executable paths and versions in the actual launch environment; a different shell's PATH can select another Kimi or Node installation. Use a bounded environment probe only within the authorized environment. Do not launch a real project queue as a setup smoke test. A runnable configuration can remain `unverified` until its environment proof runs; record exactly which check is missing. The final temporary Kimi trial proves actual authentication and task execution, not just file existence.

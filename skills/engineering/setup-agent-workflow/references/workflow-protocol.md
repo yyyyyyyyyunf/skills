@@ -26,7 +26,7 @@ The commands read JSON stdin, write exactly one JSON stdout value and use nonzer
     "readyStatuses": ["To Do"],
     "doneStatuses": ["Done"]
   },
-  "contractPaths": ["docs/agents/acceptance.md", "backlog/config.yml"],
+  "contractPaths": ["docs/agents/acceptance.md", "backlog/config.yml", ".sandcastle/main.mjs", ".sandcastle/prompt.md"],
   "reportRoot": "acceptance/reports",
   "evidenceRoots": ["acceptance/runs"]
 }
@@ -36,17 +36,19 @@ Substitute actual status/label vocabulary, CLI argv and paths. Scope has exactly
 
 Backlog must use `checkActiveBranches: false` and `remoteOperations: false`; automatic decisions read the local committed checkout. `task list` does not contain dependencies, so the command reads task and dependency detail and checks committed files. For label/parent scopes, it reconciles the CLI list with Git’s task-file inventory: malformed YAML silently omitted by Backlog is a read error. Task directories must use the CLI-generated `<id> - <title>.md` naming. `Done` is terminal in either `tasks/` or `completed/`. Collection is maintenance, not an extra completion requirement.
 
-`contractPaths` lists the existing approved project acceptance rules and relevant tracker configuration. These files and the workflow configuration are frozen by their committed bytes at the target revision. The selected ticket, its direct dependencies and parent chain also carry contract hashes: title, description, criteria, definition of done, dependencies and references. Claims, notes, checked boxes and terminal status can change; changing the agreed contract requires a new prepared attempt.
+`contractPaths` lists the existing approved project acceptance rules, relevant tracker configuration and actual native entry/prompt paths. These files and the workflow configuration are frozen by their committed bytes at the target revision. The selected ticket, its direct dependencies and parent chain also carry contract hashes: title, description, criteria, definition of done, dependencies and references. Claims, notes, checked boxes and terminal status can change; changing the agreed contract requires a new prepared attempt.
+
+For native startup, add the `runner` settings and installed `workflowRunOptions` binding described in [Sandcastle setup](sandcastle.md#one-project-configuration-installed-shared-checks). The helper returns native options; it does not execute the queue. Keep agent/model/auth construction in the project entry. The shared commands also accept this configuration's extra `runner` section, which is frozen with the other configuration bytes.
 
 ## Host handoff and decisions
 
 Prepare input contains `version: 1`, a fresh `iterationId`, `hostRepoDir`, `targetBranch` and the full `targetCommit`. It returns `version: 1`, `decision: run | no-work | blocked`, and opaque `metadata`. A run includes `ticketId`, `taskPath` and frozen contract bindings. Blocked includes the remaining ticket IDs and reasons. A failed read is an error, never an empty queue.
 
-Sandcastle passes that exact metadata into the agent handoff and subsequent verify context. The agent works only on the selected ticket. Its attempt ID is the host's `iterationId`; it does not generate or recycle one.
+Sandcastle appends one `<sandcastle-iteration-context>` JSON handoff after resolving the project prompt. It carries that exact metadata, the preparation context, actual `worktreePath`/`sandboxRepoDir`, `sourceBranch`, durable per-iteration `artifactRoot` and `outputTag`. The agent works only on the selected ticket. Its attempt ID is the host's `iterationId`; it does not generate or recycle one. Evidence is written at configured relative paths in the worktree, then exported by Sandcastle before verification and cleanup; the agent must not invent a host artifact path.
 
-Verify additionally receives `worktreePath`, `sourceBranch`, `candidateCommit`, durable `artifactRoot` and `resultPath`. Sandcastle's structured extractor writes the per-iteration object at `result.output`. The shared checker does not scrape stdout tags. The agent emits:
+Verify receives the same metadata plus `worktreePath`, `sourceBranch`, `candidateCommit`, durable `artifactRoot` and `resultPath`. Sandcastle's structured extractor writes the per-iteration object at `result.output`. The shared checker does not scrape stdout tags.
 
-Use the installed `scripts/workflow-output.mjs` export `workflowOutputSchema` as the Standard Schema for `Output.object({ tag: "workflow-result", schema: workflowOutputSchema })`. The prompt instructs the agent to put the following object inside `<workflow-result>…</workflow-result>`; the checker uses the same schema. Do not copy a project-specific validator.
+Use the installed `scripts/workflow-output.mjs` export `workflowOutputSchema` as the Standard Schema for native `iterationOutput: Output.object({ tag: "workflow-result", schema: workflowOutputSchema, maxRetries: 0 })`. The prompt instructs the agent to put the following object inside `<workflow-result>…</workflow-result>`; the checker uses the same schema. Do not copy a project-specific validator or use the legacy single-result `output` option for this queue.
 
 ```json
 {
