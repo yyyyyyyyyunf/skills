@@ -2,6 +2,8 @@
 
 Read after [unattended execution](unattended-execution.md) when Sandcastle is present or selected. Inspect the installed package exports/types/templates. This integration requires `WORKFLOW_PROTOCOL_VERSION === 1`, `preparation`, `verification`, `iterationOutput`, artifact export and confirmed cancellation. The original official 0.12.0 lacks this protocol; a version string alone cannot distinguish it from a compatible local fork artifact. Report an upgrade/preparation gap before agent invocation when capabilities are missing. Do not generate a per-project outer loop as a fallback.
 
+This workflow's maintained fork is `@fly4ai/sandcastle` ([source](https://github.com/yyyyyyyyyunf/sandcastle)). Use that package name for installation, initialization and imports, including `@fly4ai/sandcastle/sandboxes/no-sandbox`. Keep capability checks when using a local tarball or another explicitly selected compatible build.
+
 ## Initialize or migrate
 
 For first use, reuse the selected package's official initializer and inspect its help. A blank scaffold and Custom tracker suit Backlog. Use supported non-interactive flags. If the selected third-party agent or provider is absent from the menu, placeholder scaffold selections are acceptable without execution or image building; immediately replace the active wiring with the selected adapter, model/auth and provider before any run. Initialization, dependency/image preparation and live execution are separate steps.
@@ -9,6 +11,8 @@ For first use, reuse the selected package's official initializer and inspect its
 For a rerun, follow package scripts to the actual entry and every referenced prompt. `sandcastle init` rejects an existing `.sandcastle/`; do not delete logs or retained work to make it run. Edit active configuration in place, preserving model/auth choices, useful hooks, limits and project acceptance requirements. Retire active references to a bespoke AFK loop/reaper/checker after wiring the native entry. Historical scripts and records can remain inactive for review; migration does not execute cleanup or replay their real queue.
 
 Resolve the selected agent's existing adapter package from project dependencies, a supplied installation or its primary documentation. If it is unavailable, record the dependency preparation needed; do not implement a new project-specific adapter as a setup workaround. For Kimi, the existing `sandcastle-agent-kimi` package supplies `kimiCode`. Preserve the selected host OAuth alias or API-key channel when constructing it.
+
+`sandcastle-agent-kimi` 0.1.1 declares its peer and type import under `@ai-hero/sandcastle`. When pairing that adapter with this fork, satisfy the old peer name with an npm alias to the same fork version (`@ai-hero/sandcastle@npm:@fly4ai/sandcastle@^0.13.0`), alongside the direct `@fly4ai/sandcastle` dependency. Inspect the adapter's installed manifest before applying this compatibility step to later releases.
 
 ## One project configuration, installed shared checks
 
