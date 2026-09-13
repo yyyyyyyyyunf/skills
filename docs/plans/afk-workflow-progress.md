@@ -12,7 +12,7 @@ Spec and dependency graph: [implementation plan](afk-workflow-implementation.md)
 | P5 | passed | `acceptance/reports/AFK-P5-workflow.md`, code `10b113b`: 35 passed, no skips; integrity gate passed; final Standards/Spec reviews have no remaining findings |
 | P6 | passed | Sandcastle `acceptance/reports/AFK-P6-iterations.md`, code `82183fc`: 1561 passed/2 existing Windows skips in 69 files, typecheck/build passed; real shared-command Backlog integration passed; final reviews have no remaining findings |
 | P7 | passed | `acceptance/reports/AFK-P7-setup.md`, code `3c5227f`: 51 shared tests, migration proof and 12 native forward scenarios passed; integrity passed, final Standards/Spec reviews have zero findings |
-| P8 | in progress | Bound plan `acceptance/plans/AFK-P8.md`; package identity, bounded real environment probe and two dependent Kimi tasks in a fresh temporary project |
+| P8 | in progress | Package identity and real capability probe passed; proof code `44d53b6` has zero final review findings. First real run merged TASK-1 but hit the trial's 900-second deadline during TASK-2 finalization; stopped processes and retained work verified (`acceptance/runs/AFK-P8/run-1/`). Full repeat is running from seeded contracts in `/private/tmp/afk-native-retry-uxqe3ioa/repo`, using the setup template's finite 3600-second deadline; see `acceptance/plans/AFK-P8.md` |
 
 Development branch in both repositories: `codex/afk-workflow`. Sandcastle implementation worktree: `/private/tmp/afk-sandcastle-work`, linked to the user's fork at `/Users/zongyf/Documents/code/sandcastle`. Its original checkout and the historical demo remain unchanged.
 
