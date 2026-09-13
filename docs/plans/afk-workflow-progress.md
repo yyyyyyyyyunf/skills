@@ -8,8 +8,8 @@ Spec and dependency graph: [implementation plan](afk-workflow-implementation.md)
 | P1 | passed | Sandcastle `acceptance/reports/AFK-P1-termination.md`, code `9c8fef3`: 1465 passed/2 Windows skips in 55 files; typecheck/build passed. Two-axis review has no remaining findings. Original process-group probe passed 96/96 after the Darwin reaping repair |
 | P2 | passed | Sandcastle `acceptance/reports/AFK-P2-activity.md`, code `c4867c2`: 1487 passed/2 Windows skips in 58 files; typecheck/build passed; final two-axis review has no remaining findings |
 | P3 | passed | Sandcastle `acceptance/reports/AFK-P3-evidence.md`, code `f3d4442`: 1499 passed/2 Windows skips in 61 files; typecheck/build passed; both independent reviews have zero remaining findings |
-| P4 | in progress | Bound Sandcastle plan `acceptance/plans/AFK-P4.md`; single-iteration guarded merge |
-| P5 | pending P4 | Shared workflow prepare/verify commands |
+| P4 | passed | Sandcastle `acceptance/reports/AFK-P4-verification.md`, code `b3c353c`: 1521 passed/2 Windows skips in 65 files; typecheck/build passed; both reviews have no remaining findings |
+| P5 | in progress | Bound plan `acceptance/plans/AFK-P5.md`; shared workflow prepare/verify commands |
 | P6 | pending P4, P5 | Native multi-iteration progression |
 | P7 | pending P2, P6 | Setup migration and Backlog conventions |
 | P8 | pending P7 | Packaged real AFK trial |
