@@ -14,6 +14,16 @@ import {
 import { backlogReader, taskContract } from "./workflow-backlog.mjs";
 import { workflowOutputSchema } from "./workflow-output.mjs";
 
+function reportField(report, name) {
+  const prefix = `${name}:`;
+  const lines = report
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.toLowerCase().startsWith(prefix));
+  check(lines.length === 1, `Report must contain exactly one ${name} field`);
+  return lines[0].slice(prefix.length).trim();
+}
+
 export function verify(ctx, config) {
   const output = JSON.parse(readFileSync(ctx.resultPath, "utf8")).output;
   const validation = workflowOutputSchema["~standard"].validate(output);
@@ -137,32 +147,23 @@ export function verify(ctx, config) {
   );
   check(sha256(reportBytes) === receipt.report.sha256, "Report hash mismatch");
   const report = reportBytes.toString("utf8");
-  const verdicts = [...report.matchAll(/^verdict:\s*(passed|held)\s*$/gm)];
   check(
-    verdicts.length === 1 && verdicts[0][1] === receipt.verdict,
+    reportField(report, "verdict") === receipt.verdict,
     "Report verdict contradicts receipt",
   );
-  const codeStates = [
-    ...report.matchAll(
-      /^code state:[ \t]*([a-f0-9]{40}|[a-f0-9]{64})[ \t]*$/gm,
-    ),
-  ];
   check(
-    codeStates.length === 1 &&
-      codeStates[0][1] === receipt.implementationRevision,
+    reportField(report, "code state") === receipt.implementationRevision,
     "Report code state must equal the judged implementation revision without uncommitted changes",
   );
-  const accounting = [
-    ...report.matchAll(
-      /^required criteria:\s*(\d+)\/(\d+)\s*·\s*required gates:\s*(\d+)\/(\d+)\s*$/gm,
-    ),
-  ];
+  const accounting = /^(\d+)\/(\d+)\s*·\s*required gates:\s*(\d+)\/(\d+)$/.exec(
+    reportField(report, "required criteria"),
+  );
   check(
-    accounting.length === 1,
+    accounting && !/^[ \t]*required gates:/im.test(report),
     "Report is missing unambiguous required accounting",
   );
   const [, criteriaPassed, criteriaTotal, gatesPassed, gatesTotal] =
-    accounting[0].map(Number);
+    accounting.map(Number);
   check(
     [criteriaPassed, criteriaTotal, gatesPassed, gatesTotal].every(
       Number.isSafeInteger,
@@ -175,7 +176,11 @@ export function verify(ctx, config) {
   const bindings = [
     ...report.matchAll(/^```afk-acceptance\r?\n([\s\S]*?)^```\s*$/gm),
   ];
-  check(bindings.length === 1, "Expected one afk-acceptance report binding");
+  check(
+    bindings.length === 1 &&
+      [...report.matchAll(/^[ \t]*```afk-acceptance\b/gm)].length === 1,
+    "Expected one afk-acceptance report binding",
+  );
   const { report: ignored, ...binding } = receipt;
   const actual = JSON.parse(bindings[0][1]);
   check(

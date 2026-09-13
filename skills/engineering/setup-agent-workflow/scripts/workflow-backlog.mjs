@@ -110,6 +110,9 @@ export function backlogReader(cwd, config) {
     const listed = tasks.map((task) => detail(task.id));
     check(
       listed.length === activePaths.size &&
+        new Set(listed.map((task) => task.path)).size === listed.length &&
+        new Set(listed.map((task) => task.id.toUpperCase())).size ===
+          listed.length &&
         listed.every((task) => activePaths.has(task.path)),
       "Backlog task list does not match committed task inventory",
     );

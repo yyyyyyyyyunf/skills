@@ -418,6 +418,26 @@ for (const [name, mutate, error] of [
     /code state|revision/i,
   ],
   [
+    "duplicate report code state",
+    (f) =>
+      alterReport(
+        f,
+        (text) =>
+          text +
+          `\ncode state: ${f.ctx.targetCommit} plus uncommitted source changes\n`,
+      ),
+    /code state/i,
+  ],
+  [
+    "duplicate report verdict",
+    (f) =>
+      alterReport(
+        f,
+        (text) => text + "\nverdict: passed with missing checks\n",
+      ),
+    /verdict/i,
+  ],
+  [
     "uncommitted report code state",
     (f) =>
       alterReport(f, (text) =>
@@ -519,6 +539,23 @@ test("prepare rejects malformed CLI data and unsupported cross-branch reads", (t
   result = f.invoke("prepare", f.context());
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /JSON|property/i);
+});
+
+test("prepare rejects duplicate CLI list entries concealing a scoped task", (t) => {
+  const f = fixture(t);
+  f.task("Outside scope");
+  f.backlog("task", "edit", "TASK-1", "--remove-label", "trial");
+  f.task("In scope");
+  f.config.tracker.command = [
+    process.execPath,
+    "-e",
+    `const cp=require('node:child_process');const args=process.argv.slice(1);let result=cp.execFileSync('backlog',args,{encoding:'utf8'});if(args[0]==='task'&&args[1]==='list'){const json=JSON.parse(result);json.tasks=[json.tasks[0],json.tasks[0]];result=JSON.stringify(json);}process.stdout.write(result);`,
+  ];
+  f.write(configPath, JSON.stringify(f.config));
+  f.commit();
+  const result = f.invoke("prepare", f.context());
+  assert.notEqual(result.status, 0, result.stdout);
+  assert.match(result.stderr, /inventory|duplicate/i);
 });
 
 test("prepare rejects a dependency satisfied only by an ignored uncommitted record", (t) => {
