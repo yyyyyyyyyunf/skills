@@ -4,8 +4,8 @@ Spec and dependency graph: [implementation plan](afk-workflow-implementation.md)
 
 | Package | State | Evidence / next action |
 | --- | --- | --- |
-| P0 | in progress | Both repositories have acceptance configuration; Sandcastle dependencies installed. Typecheck passed; full baseline tests/build pending |
-| P1 | pending P0 | Real process-tree cancellation regression |
+| P0 | passed | Both acceptance reports: `acceptance/reports/AFK-P0-baseline.md`. Sandcastle 1447 passed/2 Windows skips, typecheck/build passed; skills integrity passed; independent review completed |
+| P1 | in progress | Bound plan in Sandcastle `acceptance/plans/AFK-P1.md`; real process-tree cancellation regression next |
 | P2 | pending P1 | Activity and bounded silent execution |
 | P3 | pending P0 | Durable evidence and cumulative recovery |
 | P4 | pending P1, P3 | Single-iteration guarded merge |
