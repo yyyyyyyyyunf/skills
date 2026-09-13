@@ -1,5 +1,7 @@
 # Working in this repo
 
+For the AFK reliability delivery, read `docs/agents/issue-tracker.md` for local work references and persistence rules, and `docs/agents/acceptance.md` before planning or judging acceptance.
+
 Skills live in two buckets under `skills/`:
 
 - `engineering/` — daily code work
