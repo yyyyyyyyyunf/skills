@@ -1,0 +1,20 @@
+# AFK-P7 — Native setup and Backlog lifecycle
+
+Readiness: ready; P2 and P6 passed. P6 code: Sandcastle `82183fc`, 1561 package tests passed plus real Backlog/shared-command integration; both reviews have no remaining findings. Starting skills checkpoint: `407d2a0`. Contract: P7 in [the approved implementation plan](../../docs/plans/afk-workflow-implementation.md). Gates and proof roles: [acceptance configuration](../../docs/agents/acceptance.md).
+
+| Criterion | Executable proof / expected result |
+| --- | --- |
+| AC-P7.1 | New-project fixture invokes the installed shared commands from a native entry; no project outer loop/checker copy. Missing shared files/skills fail before an agent starts |
+| AC-P7.2 | Configuration validation exercises explicit merge strategy, bounded silent execution, artifact exports, actual prompt/skill paths and protocol capability. Unsupported packages report upgrade/preparation gaps before invocation |
+| AC-P7.3 | Real Backlog commands prove Done stays in tasks, complete moves to completed without breaking detail/dependency reads, and archive is a different removal action. Selection uses real detail/readiness fields |
+| AC-P7.4 | Migration fixture based on a copy of the historical demo preserves model/auth and acceptance choices, logs, evidence and retained work while replacing the active outer-loop wiring. Prompt-driven setup is exercised and its resulting runnable configuration inspected |
+
+Update the setup skill, runner seed, Sandcastle/unattended references and Backlog tracker template. The project owns its native entry, prompt and parameters; installed shared code owns workflow checks. If startup/path/capability checks require executable support, keep that support installed once with the skill and use it from native run configuration, without adding another loop, Git recovery program, or model-auth implementation to each project.
+
+Use the P6 `WORKFLOW_PROTOCOL_VERSION`, `preparation`, `iterationOutput`, verification context and final host preparation decision. The entry must resolve its actual prompt path and complete required skills, make silent execution finite, export evidence before cleanup and stop on unresolved retained work. Core error/cleanup behavior is proved in P6; setup must not duplicate it. Document the process-completion token as a shutdown hint, not acceptance or queue exhaustion.
+
+Carry forward project preferences and acceptance contracts; old configuration, logs and recovery artifacts are inputs to migration, not permission to delete them. Backlog collection is periodic housekeeping, not every task's finalization. Backlog 1.51.0 requires creating an absent completed directory before task complete in a fresh checkout/worktree; mkdir is directory preparation, task changes still use the CLI. Fix edit --label/add-label/remove-label and use detail for dependencies rather than assuming list includes them. Do not run interactive cleanup during AFK.
+
+Agreed seams: generated native configuration and installed shared helpers/commands, fake task executor plus temporary project/Git/Backlog fixtures, and observable startup failure/call counts. Use Node's built-in runner (`node --test skills/engineering/setup-agent-workflow/scripts/*.test.mjs`) and the repository integrity gate (`bash .githooks/pre-commit`). Tests must exercise resulting behavior, not phrase matching. Bind any additional integration command before implementation of that seam. No new product baseline or model calls are needed for these deterministic cases.
+
+Independent Standards/Spec review precedes acceptance. Record raw logs in `acceptance/runs/AFK-P7/`, with final code/skill revisions and actual tool versions. P8 separately installs an npm-pack artifact into a new temporary project and executes two real Kimi tasks; keep that final environment proof outstanding until it runs.
