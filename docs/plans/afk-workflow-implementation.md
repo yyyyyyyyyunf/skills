@@ -1,6 +1,6 @@
 # AFK workflow 实施计划
 
-状态：规划完成，等待进入 P0；执行代码未修改。
+本文件记录已批准的范围与实施顺序；当前状态以 [实施进度](afk-workflow-progress.md) 为准。
 
 依据：[已约定的修复方向与验收要求](afk-workflow-reliability.md)。本文件是跨仓库实施计划，P0–P8 是工作包编号，不是已发布的 issue ID。当前 skills 仓库没有 tracker 配置，Sandcastle fork 的 tracker 文档仍指向上游；本次不据此向上游发布 issue。
 
@@ -50,7 +50,7 @@
 
 在各修改仓库建立独立开发分支并记录起点，保留本次已有的未提交设计文档。安装 Sandcastle 锁定依赖，运行现有测试、typecheck 和构建；依赖安装失败或既有测试失败要留下原始原因。
 
-skills 与 Sandcastle 当前都缺少 `docs/agents/acceptance.md`。进入各包的 `implement` 前，先通过 `setup-agent-workflow` 的配置流程补齐它们：复用本次已同意的方法与仓库现有命令，声明共享命令测试由本次交付提供。无需重新采访已定的行为，也不为修改中的 runner 开启自举 AFK。
+进入 P0 前，skills 与 Sandcastle 都缺少 `docs/agents/acceptance.md`。P0 通过 `setup-agent-workflow` 的配置流程补齐它们：复用本次已同意的方法与仓库现有命令，声明共享命令测试由本次交付提供。无需重新采访已定的行为，也不为修改中的 runner 开启自举 AFK。
 
 - **AC-P0.1**：基线命令与测试案例数可复现；未运行和失败项没有被记为通过。
 - **AC-P0.2**：用现有 `SandboxService`/provider fake seam 与临时 Git 仓库准备公共 fixtures；涉及进程的 fixtures 只创建并回收自身拥有的进程。
@@ -168,8 +168,8 @@ Node 官方文档明确区分“发出 kill 信号”与“进程已经退出”
 # Sandcastle：P0 先按 package-lock.json 安装并确认工具版本
 npm ci
 npm run typecheck
-npm test
 npm run build
+npm test
 
 # Skills：仓库已有完整性检查
 bash .githooks/pre-commit
@@ -180,6 +180,6 @@ node --test skills/engineering/setup-agent-workflow/scripts/*.test.mjs
 
 Sandcastle 修改先运行受影响文件的 Vitest 用例，再运行其要求的工程检查。Public 行为改动更新 README，按仓库规则添加 changeset；实现 bugfix 与新增能力分开描述，检查已有 changeset 避免重复。本计划不包含向 npm 发布、向上游发送消息或迁移正式项目。
 
-每包进入实现前按 `implement` → `acceptance-plan` 绑定该包合同；完成实现后独立 code review，再执行 acceptance，保留 passed/held 与证据。本计划不把工作包标为 `ready-for-agent`：P0 的配置与依赖尚未完成，尚未建立本次工作的 issue tracker 或 AFK 调度。
+每包进入实现前按 `implement` → `acceptance-plan` 绑定该包合同；完成实现后独立 code review，再执行 acceptance，保留 passed/held 与证据。本计划的工作包由当前会话执行，不作为 `ready-for-agent` 队列，也不为修改中的 runner 开启 AFK 自举。工程命令和执行顺序以各仓库的 `docs/agents/acceptance.md` 为准。
 
 当前会话可写 skills 仓库与临时目录；Sandcastle fork 和旧 demo 位于其外。到实际写入 fork、安装依赖时，通过运行环境的权限机制取得所需写入权限；规划与只读核对不受此影响。
