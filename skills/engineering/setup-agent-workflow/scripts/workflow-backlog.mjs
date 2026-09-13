@@ -9,6 +9,8 @@ import {
 } from "./workflow-io.mjs";
 
 export function backlogReader(cwd, config) {
+  const revision = git(cwd, "rev-parse", "HEAD");
+  const cache = new Map();
   const read = (...args) =>
     command(cwd, [...config.tracker.command, ...args])
       .toString("utf8")
@@ -31,6 +33,7 @@ export function backlogReader(cwd, config) {
       typeof id === "string" && /^[A-Za-z]+-\d+(?:\.\d+)*$/i.test(id),
       `Invalid Backlog ticket ID: ${id}`,
     );
+    if (cache.has(id.toUpperCase())) return cache.get(id.toUpperCase());
     const task = json("task-view", "task", "view", id).task;
     check(
       task &&
@@ -51,11 +54,12 @@ export function backlogReader(cwd, config) {
       `Ticket ${id} is not in tasks or completed`,
     );
     // CLI fields must come from this committed checkout, including completed tasks.
-    const bytes = committedFile(cwd, git(cwd, "rev-parse", "HEAD"), task.path);
+    const bytes = committedFile(cwd, revision, task.path);
     check(
       bytes.equals(regularFile(cwd, task.path)),
       `Tracker file is not committed: ${task.path}`,
     );
+    cache.set(id.toUpperCase(), task);
     return task;
   };
   const scoped = () => {
@@ -74,14 +78,46 @@ export function backlogReader(cwd, config) {
       ),
       "Malformed Backlog task list entry",
     );
-    return tasks
-      .filter((task) =>
-        scope.labels
-          ? scope.labels.every((label) => task.labels?.includes(label))
-          : task.parentTaskId?.toUpperCase() ===
-            scope.parentTaskId.toUpperCase(),
-      )
-      .map((task) => detail(task.id));
+    // Backlog can silently omit malformed YAML. Reconcile every committed
+    // task file before interpreting a label/parent scope as empty.
+    const paths = command(cwd, [
+      "git",
+      "ls-tree",
+      "-r",
+      "-z",
+      "--name-only",
+      revision,
+      "--",
+      `${config.tracker.directory}/tasks`,
+      `${config.tracker.directory}/completed`,
+    ])
+      .toString("utf8")
+      .split("\0")
+      .filter((path) => path.endsWith(".md"));
+    const activePaths = new Set();
+    for (const path of paths) {
+      const match = /\/([A-Za-z]+-\d+(?:\.\d+)*) - [^/]+\.md$/i.exec(path);
+      check(match, `Unrecognized task inventory path: ${path}`);
+      const task = detail(match[1]);
+      check(task.path === path, `Ambiguous task inventory record: ${path}`);
+      if (under(path, [`${config.tracker.directory}/completed`]))
+        check(
+          config.queue.doneStatuses.includes(task.status),
+          `Collected task is not terminal: ${task.id}`,
+        );
+      else activePaths.add(path);
+    }
+    const listed = tasks.map((task) => detail(task.id));
+    check(
+      listed.length === activePaths.size &&
+        listed.every((task) => activePaths.has(task.path)),
+      "Backlog task list does not match committed task inventory",
+    );
+    return listed.filter((task) =>
+      scope.labels
+        ? scope.labels.every((label) => task.labels?.includes(label))
+        : task.parentTaskId?.toUpperCase() === scope.parentTaskId.toUpperCase(),
+    );
   };
   return { detail, scoped };
 }
@@ -120,6 +156,7 @@ export function prepare(ctx, config, configPath) {
   const blockers = [];
   const eligible = remaining
     .filter((task) => {
+      const dependencies = task.dependencies.map(reader.detail);
       const readiness = task.readiness;
       check(
         readiness &&
@@ -143,7 +180,10 @@ export function prepare(ctx, config, configPath) {
         !readiness.isReady ||
         readiness.isBlocked ||
         readiness.blockingDependencies.length ||
-        readiness.missingDependencies.length
+        readiness.missingDependencies.length ||
+        dependencies.some(
+          (dependency) => !q.doneStatuses.includes(dependency.status),
+        )
       )
         reasons.push("readiness/dependencies");
       if (!task.acceptanceCriteria.length)
@@ -182,6 +222,10 @@ export function prepare(ctx, config, configPath) {
       ticketId: task.id,
       taskPath: task.path,
       taskContract: taskContract(task),
+      dependencyContracts: task.dependencies.map((id) => {
+        const dependency = reader.detail(id);
+        return { ticketId: dependency.id, sha256: taskContract(dependency) };
+      }),
       parentContracts,
       contractFiles,
     },

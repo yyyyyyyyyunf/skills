@@ -81,6 +81,17 @@ export function verify(ctx, config) {
       taskContract(reader.detail(parent.ticketId)) === parent.sha256,
       `Parent contract changed: ${parent.ticketId}`,
     );
+  for (const dependency of ctx.metadata.dependencyContracts ?? []) {
+    const record = reader.detail(dependency.ticketId);
+    check(
+      config.queue.doneStatuses.includes(record.status),
+      `Dependency is no longer terminal: ${record.id}`,
+    );
+    check(
+      taskContract(record) === dependency.sha256,
+      `Dependency contract changed: ${record.id}`,
+    );
+  }
   check(
     task.acceptanceCriteria.length > 0 &&
       task.acceptanceCriteria.every((item) => item.checked === true) &&
@@ -130,6 +141,16 @@ export function verify(ctx, config) {
   check(
     verdicts.length === 1 && verdicts[0][1] === receipt.verdict,
     "Report verdict contradicts receipt",
+  );
+  const codeStates = [
+    ...report.matchAll(
+      /^code state:[ \t]*([a-f0-9]{40}|[a-f0-9]{64})[ \t]*$/gm,
+    ),
+  ];
+  check(
+    codeStates.length === 1 &&
+      codeStates[0][1] === receipt.implementationRevision,
+    "Report code state must equal the judged implementation revision without uncommitted changes",
   );
   const accounting = [
     ...report.matchAll(

@@ -34,9 +34,9 @@ The commands read JSON stdin, write exactly one JSON stdout value and use nonzer
 
 Substitute actual status/label vocabulary, CLI argv and paths. Scope has exactly one of `labels` (all match), `taskIds`, or `parentTaskId` (direct children). Scope labels describe the work, independently of triage readiness. Otherwise an unfinished ticket losing its ready label could falsely make the queue look empty. All scoped unfinished leaves count; parent specs/maps and tasks with children are excluded. An eligible leaf has the ready label, no conflicting role, an allowed status, no other assignee, nonempty acceptance criteria and Backlog's detailed dependency readiness. Selection is stable numeric ticket-ID order.
 
-Backlog must use `checkActiveBranches: false` and `remoteOperations: false`; automatic decisions read the local committed checkout. `task list` does not contain dependencies, so the command reads task detail. `Done` is terminal in either `tasks/` or `completed/`. Collection is maintenance, not an extra completion requirement.
+Backlog must use `checkActiveBranches: false` and `remoteOperations: false`; automatic decisions read the local committed checkout. `task list` does not contain dependencies, so the command reads task and dependency detail and checks committed files. For label/parent scopes, it reconciles the CLI list with Git’s task-file inventory: malformed YAML silently omitted by Backlog is a read error. Task directories must use the CLI-generated `<id> - <title>.md` naming. `Done` is terminal in either `tasks/` or `completed/`. Collection is maintenance, not an extra completion requirement.
 
-`contractPaths` lists the existing approved project acceptance rules and relevant tracker configuration. These files and the workflow configuration are frozen by their committed bytes at the target revision. The selected ticket and its parent chain also carry contract hashes: title, description, criteria, definition of done, dependencies and references. Claims, notes, checked boxes and terminal status can change; changing the agreed contract requires a new prepared attempt.
+`contractPaths` lists the existing approved project acceptance rules and relevant tracker configuration. These files and the workflow configuration are frozen by their committed bytes at the target revision. The selected ticket, its direct dependencies and parent chain also carry contract hashes: title, description, criteria, definition of done, dependencies and references. Claims, notes, checked boxes and terminal status can change; changing the agreed contract requires a new prepared attempt.
 
 ## Host handoff and decisions
 
@@ -57,11 +57,11 @@ Use the installed `scripts/workflow-output.mjs` export `workflowOutputSchema` as
 }
 ```
 
-`held` and `incomplete` use the same identities, their outcome and an `unresolved` list; they return `retain` and stop. Only a verified `completed` returns `accept`. Queue `no-work`/`blocked` belong to host preparation, not the agent's per-ticket output. Malformed, missing, stale or contradictory completion data is an error with preserved recovery references.
+`held` and `incomplete` use the same identities, their outcome and a nonempty `unresolved` list containing reasons and next actions; they return `retain` and stop. Only a verified `completed` returns `accept`. Queue `no-work`/`blocked` belong to host preparation, not the agent's per-ticket output. Malformed, missing, stale or contradictory completion data is an error with preserved recovery references.
 
 ## Acceptance report and receipt
 
-During unattended acceptance, record the full implementation revision actually judged. It includes executable test specs and required plans; commit them before collecting the final evidence. Complete the existing acceptance report with its required criterion/gate accounting. Its verdict line is exactly one `verdict: passed` or `verdict: held`.
+During unattended acceptance, record the full implementation revision actually judged. It includes executable test specs and required plans; commit them before collecting the final evidence. Complete the existing acceptance report with its required criterion/gate accounting. Its verdict line is exactly one `verdict: passed` or `verdict: held`. For completed delivery, write exactly one `code state: <full Git SHA>` line matching `implementationRevision`, with no uncommitted changes or extra annotation.
 
 Keep the standard `required criteria: <passed>/<total> · required gates: <passed>/<total>` line. Completed delivery requires at least one criterion and all required criteria/gates passed. The host rejects missing or contradictory accounting without rejudging the individual assertions.
 

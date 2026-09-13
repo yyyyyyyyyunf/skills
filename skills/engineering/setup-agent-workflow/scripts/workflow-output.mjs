@@ -15,7 +15,9 @@ export const workflowOutputSchema = {
       if (
         value.unresolved !== undefined &&
         (!Array.isArray(value.unresolved) ||
-          value.unresolved.some((item) => typeof item !== "string"))
+          value.unresolved.some(
+            (item) => typeof item !== "string" || !item.trim(),
+          ))
       )
         issues.push({ message: "unresolved must be a list of strings" });
       if (value.outcome === "completed") {
@@ -23,6 +25,10 @@ export const workflowOutputSchema = {
           issues.push({ message: "Completed output requires receiptPath" });
         if (value.unresolved?.length)
           issues.push({ message: "Completed output has unresolved steps" });
+      } else if (!value.unresolved?.length) {
+        issues.push({
+          message: "Retained outcome requires nonempty unresolved steps",
+        });
       }
       return issues.length ? { issues } : { value };
     },

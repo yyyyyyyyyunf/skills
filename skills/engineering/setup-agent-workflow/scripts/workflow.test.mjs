@@ -206,7 +206,7 @@ function delivery(t, { collect = false } = {}) {
   const reportPath = "acceptance/reports/TASK-1-attempt-1.md",
     receiptPath = "acceptance/reports/TASK-1-attempt-1.receipt.json";
   const report = () =>
-    `# Acceptance — TASK-1\n\nverdict: ${binding.verdict}\nrequired criteria: 1/1 · required gates: 1/1\n\nThe agreed check passed.\n\n\`\`\`afk-acceptance\n${JSON.stringify(binding)}\n\`\`\`\n`;
+    `# Acceptance — TASK-1\n\nverdict: ${binding.verdict}\nrequired criteria: 1/1 · required gates: 1/1\ncode state: ${binding.implementationRevision}\n\nThe agreed check passed.\n\n\`\`\`afk-acceptance\n${JSON.stringify(binding)}\n\`\`\`\n`;
   const seal = () => {
     f.write(reportPath, report());
     f.write(
@@ -407,6 +407,28 @@ for (const [name, mutate, error] of [
     /verdict/i,
   ],
   [
+    "report code state mismatch",
+    (f) =>
+      alterReport(f, (text) =>
+        text.replace(
+          `code state: ${f.binding.implementationRevision}`,
+          `code state: ${f.ctx.targetCommit}`,
+        ),
+      ),
+    /code state|revision/i,
+  ],
+  [
+    "uncommitted report code state",
+    (f) =>
+      alterReport(f, (text) =>
+        text.replace(
+          `code state: ${f.binding.implementationRevision}`,
+          `code state: ${f.binding.implementationRevision} plus uncommitted source changes`,
+        ),
+      ),
+    /code state|revision/i,
+  ],
+  [
     "failed required accounting",
     (f) =>
       alterReport(f, (text) =>
@@ -460,11 +482,22 @@ for (const outcome of ["held", "incomplete"])
   test(`verify retains ${outcome} without claiming delivery`, (t) => {
     const f = delivery(t);
     f.output.outcome = outcome;
+    f.output.unresolved = [
+      "Required proof is unavailable; restore the check environment before resuming.",
+    ];
     const result = f.verify();
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.value.decision, "retain");
     assert.equal(result.value.outcome.status, outcome);
   });
+
+test("verify rejects held without unresolved steps", (t) => {
+  const f = delivery(t);
+  f.output.outcome = "held";
+  const result = f.verify();
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /unresolved/i);
+});
 
 test("prepare rejects malformed CLI data and unsupported cross-branch reads", (t) => {
   const f = fixture(t);
@@ -486,6 +519,39 @@ test("prepare rejects malformed CLI data and unsupported cross-branch reads", (t
   result = f.invoke("prepare", f.context());
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /JSON|property/i);
+});
+
+test("prepare rejects a dependency satisfied only by an ignored uncommitted record", (t) => {
+  const f = fixture(t, { taskIds: ["TASK-2"] });
+  f.task("Dependency");
+  f.task("Selected", "--dep", "TASK-1");
+  f.commit();
+  const path = JSON.parse(f.backlog("task", "view", "TASK-1", "--json")).task
+    .path;
+  f.git("rm", "--cached", path);
+  f.write(".gitignore", `acceptance/runs/\n${path}\n`);
+  f.commit();
+  f.backlog("task", "edit", "TASK-1", "-s", "Done");
+  assert.equal(f.git("status", "--porcelain"), "");
+  const result = f.invoke("prepare", f.context());
+  assert.notEqual(result.status, 0, result.stdout);
+  assert.match(result.stderr, /committed/i);
+});
+
+test("prepare rejects a committed malformed task omitted by Backlog list", (t) => {
+  const f = fixture(t);
+  f.task("Broken metadata");
+  f.commit();
+  const path = JSON.parse(f.backlog("task", "view", "TASK-1", "--json")).task
+    .path;
+  f.write(
+    path,
+    "---\nid: TASK-1\ntitle: Broken metadata\nstatus: To Do\nlabels: [trial\n---\n",
+  );
+  f.commit();
+  const result = f.invoke("prepare", f.context());
+  assert.notEqual(result.status, 0, result.stdout);
+  assert.match(result.stderr, /task|TASK-1|inventory/i);
 });
 
 test("verify rejects absent or malformed extracted output", (t) => {

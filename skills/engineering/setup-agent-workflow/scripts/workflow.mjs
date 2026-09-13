@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync } from "node:fs";
-import { check, clean, loadConfig } from "./workflow-io.mjs";
+import { check, clean } from "./workflow-io.mjs";
+import { loadConfig } from "./workflow-config.mjs";
 import { prepare } from "./workflow-backlog.mjs";
 import { verify } from "./workflow-verify.mjs";
 
