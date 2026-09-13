@@ -9,8 +9,8 @@ Spec and dependency graph: [implementation plan](afk-workflow-implementation.md)
 | P2 | passed | Sandcastle `acceptance/reports/AFK-P2-activity.md`, code `c4867c2`: 1487 passed/2 Windows skips in 58 files; typecheck/build passed; final two-axis review has no remaining findings |
 | P3 | passed | Sandcastle `acceptance/reports/AFK-P3-evidence.md`, code `f3d4442`: 1499 passed/2 Windows skips in 61 files; typecheck/build passed; both independent reviews have zero remaining findings |
 | P4 | passed | Sandcastle `acceptance/reports/AFK-P4-verification.md`, code `b3c353c`: 1521 passed/2 Windows skips in 65 files; typecheck/build passed; both reviews have no remaining findings |
-| P5 | in progress | Bound plan `acceptance/plans/AFK-P5.md`; shared workflow prepare/verify commands |
-| P6 | pending P4, P5 | Native multi-iteration progression |
+| P5 | passed | `acceptance/reports/AFK-P5-workflow.md`, code `10b113b`: 35 passed, no skips; integrity gate passed; final Standards/Spec reviews have no remaining findings |
+| P6 | in progress | Bound Sandcastle plan `acceptance/plans/AFK-P6.md`; native preparation and verified per-iteration output |
 | P7 | pending P2, P6 | Setup migration and Backlog conventions |
 | P8 | pending P7 | Packaged real AFK trial |
 
